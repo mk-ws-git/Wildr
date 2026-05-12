@@ -2,17 +2,17 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    app_name: str = "Wildr API"
-    debug: bool = False
+    APP_NAME: str = "Wildr API"
+    DEBUG: bool = False
 
-    database_url: str = "postgresql://localhost/wildr"
-    secret_key: str = "change_me_in_production"
+    DATABASE_URL: str = "postgresql+asyncpg://localhost/wildr"
+    SECRET_KEY: str = "change_me_in_production"
 
-    anthropic_api_key: str = ""
-    mapbox_token: str = ""
+    ANTHROPIC_API_KEY: str = ""
+    MAPBOX_TOKEN: str = ""
 
     class Config:
-        env_file = "../../.env"
+        env_file = "../.env"
 
 
 settings = Settings()
