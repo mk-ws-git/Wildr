@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import NavBar from './components/NavBar'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -12,8 +13,18 @@ import Walks from './pages/Walks'
 import WalkDetail from './pages/WalkDetail'
 import LocationDetail from './pages/LocationDetail'
 import Profile from './pages/Profile'
+import api from './api/client'
+import useAuthStore from './store/authStore'
 
 export default function App() {
+  const { token, setUser } = useAuthStore()
+
+  useEffect(() => {
+    if (token) {
+      api.get('/auth/me').then(({ data }) => setUser(data)).catch(() => {})
+    }
+  }, [])
+
   return (
     <>
       <NavBar />
