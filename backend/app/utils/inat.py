@@ -1,6 +1,7 @@
 import httpx
+from app.core.config import settings
 
-INAT_VISION_URL = "https://api.inaturalist.org/v2/computervision/score_image"
+INAT_VISION_URL = "https://api.inaturalist.org/v1/computervision/score_image"
 
 
 async def identify_photo(image_bytes: bytes) -> list[dict]:
@@ -8,6 +9,7 @@ async def identify_photo(image_bytes: bytes) -> list[dict]:
         response = await client.post(
             INAT_VISION_URL,
             files={"image": ("photo.jpg", image_bytes, "image/jpeg")},
+            headers={"Authorization": settings.INAT_API_TOKEN},
         )
         response.raise_for_status()
         data = response.json()
@@ -15,10 +17,11 @@ async def identify_photo(image_bytes: bytes) -> list[dict]:
     results = []
     for result in data.get("results", []):
         taxon = result.get("taxon", {})
+        raw_score = result.get("combined_score", 0)
         results.append({
             "common_name": taxon.get("preferred_common_name", ""),
             "scientific_name": taxon.get("name", ""),
-            "score": result.get("combined_score", 0),
+            "score": round(raw_score / 100, 4),
             "taxon_id": taxon.get("id"),
             "iconic_taxon": taxon.get("iconic_taxon_name", ""),
         })
