@@ -16,6 +16,10 @@ class UserResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+class UserUpdate(BaseModel):
+    bio: str | None = None
+    avatar_url: str | None = None  
+
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
