@@ -1,0 +1,3 @@
+export default function WalkDetail() {
+  return <div>WalkDetail</div>
+}

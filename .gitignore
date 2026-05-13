@@ -28,3 +28,6 @@ dist/
 
 # Project notes
 project files/
+
+# Claude Code local files
+.claude/

@@ -298,6 +298,7 @@ RapidFuzz==3.14.3
 rdflib==7.4.0
 referencing==0.37.0
 reportlab==4.4.9
+resampy==0.4.3
 requests==2.32.5
 rich==14.2.0
 rich-toolkit==0.19.7
