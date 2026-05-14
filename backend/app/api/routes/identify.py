@@ -3,12 +3,16 @@ import uuid
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.core.deps import get_current_user
 from app.database import get_db
 from app.models.user import User
 from app.models.species import Species
 from app.models.sighting import Sighting
+from app.models.user_species import UserSpecies
+from app.models.location import Location
 from app.schemas.species import SpeciesResponse
+from app.utils.badges import award_badges
 from app.utils.inat import identify_photo
 from app.utils.gbif import get_species_data
 from app.utils.claude_enrich import enrich_species
@@ -17,6 +21,25 @@ from app.utils.birdnet import analyze_audio
 from app.utils.waveform import generate_waveform
 
 router = APIRouter()
+
+
+async def _validate_location(db: AsyncSession, location_id: int) -> None:
+    result = await db.execute(select(Location).where(Location.id == location_id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Location not found")
+
+
+async def _upsert_user_species(db: AsyncSession, user_id: int, species_id: int) -> bool:
+    """Insert user_species row if first time seeing this species. Returns True if new."""
+    stmt = (
+        pg_insert(UserSpecies)
+        .values(user_id=user_id, species_id=species_id)
+        .on_conflict_do_nothing(index_elements=["user_id", "species_id"])
+        .returning(UserSpecies.id)
+    )
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none() is not None
+
 
 KINGDOM_MAP = {
     "Plantae": "plant", "Fungi": "fungi", "Aves": "bird",
@@ -35,6 +58,9 @@ async def identify_photo_route(
     db: AsyncSession = Depends(get_db),
 ):
     image_bytes = await photo.read()
+
+    if location_id is not None:
+        await _validate_location(db, location_id)
 
     # 1. Upload to R2
     key = f"sightings/{uuid.uuid4()}.jpg"
@@ -87,6 +113,9 @@ async def identify_photo_route(
         photo_url=photo_url,
     )
     db.add(sighting)
+    await db.flush()
+    first_sighting = await _upsert_user_species(db, current_user.id, species.id)
+    new_badges = await award_badges(current_user.id, db)
     await db.commit()
     await db.refresh(species)
     await db.refresh(sighting)
@@ -102,6 +131,8 @@ async def identify_photo_route(
         "uncertain": uncertain,
         "suggestions": suggestions,
         "show_endangered_banner": show_endangered_banner,
+        "first_sighting": first_sighting,
+        "new_badges": new_badges,
         "photo_url": photo_url,
     }
 
@@ -116,6 +147,9 @@ async def identify_audio_route(
     db: AsyncSession = Depends(get_db),
 ):
     audio_bytes = await audio.read()
+
+    if location_id is not None:
+        await _validate_location(db, location_id)
 
     # 1. Upload to R2
     key = f"sightings/audio/{uuid.uuid4()}.mp3"
@@ -173,6 +207,9 @@ async def identify_audio_route(
         waveform_data=waveform_data,
     )
     db.add(sighting)
+    await db.flush()
+    first_sighting = await _upsert_user_species(db, current_user.id, species.id)
+    new_badges = await award_badges(current_user.id, db)
     await db.commit()
     await db.refresh(species)
     await db.refresh(sighting)
@@ -188,4 +225,6 @@ async def identify_audio_route(
         "audio_url": audio_url,
         "waveform_data": waveform_data,
         "show_endangered_banner": show_endangered_banner,
+        "first_sighting": first_sighting,
+        "new_badges": new_badges,
     }

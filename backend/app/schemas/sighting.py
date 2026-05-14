@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Any
 
 
 class SightingCreate(BaseModel):
@@ -17,6 +18,8 @@ class SightingResponse(BaseModel):
     location_id: int | None
     photo_url: str | None
     audio_url: str | None
+    waveform_data: list[Any] | None
+    is_private: bool
     notes: str | None
     identified_at: datetime
 
