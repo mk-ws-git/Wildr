@@ -7,23 +7,22 @@ function formatDate(value) {
 
 function BadgeCard({ item }) {
   return (
-    <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-5 flex items-start gap-4">
+    <div style={{ background: 'var(--bd-card)', border: '1px solid var(--bd-rule)', borderRadius: '1.5rem', padding: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
       <div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white text-lg font-bold"
-        style={{ backgroundColor: 'var(--bd-moss)' }}
+        style={{ width: 48, height: 48, borderRadius: '0.75rem', background: 'var(--bd-moss)', display: 'grid', placeItems: 'center', flexShrink: 0, color: '#fff', fontSize: '1.1rem', fontWeight: 700 }}
       >
         {item.badge.icon_url ? (
-          <img src={item.badge.icon_url} alt="" className="w-8 h-8 object-contain" />
+          <img src={item.badge.icon_url} alt="" style={{ width: 32, height: 32, objectFit: 'contain' }} />
         ) : (
           item.badge.name[0].toUpperCase()
         )}
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-sm" style={{ color: 'var(--bd-ink)' }}>{item.badge.name}</p>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--bd-ink)', margin: 0 }}>{item.badge.name}</p>
         {item.badge.description && (
-          <p className="text-xs mt-0.5" style={{ color: 'var(--bd-ink-soft)' }}>{item.badge.description}</p>
+          <p style={{ fontSize: '0.75rem', marginTop: '0.2rem', color: 'var(--bd-ink-mute)' }}>{item.badge.description}</p>
         )}
-        <p className="text-xs mt-2" style={{ color: 'var(--bd-ink-mute)' }}>Earned {formatDate(item.earned_at)}</p>
+        <p style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: 'var(--bd-ink-mute)' }}>Earned {formatDate(item.earned_at)}</p>
       </div>
     </div>
   )
@@ -41,25 +40,25 @@ export default function Badges() {
   }, [])
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <div>
-        <h1 className="text-2xl font-semibold" style={{ color: 'var(--bd-ink)' }}>Badges</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--bd-ink-soft)' }}>Achievements earned through your sightings and exploration.</p>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--bd-ink)', margin: 0 }}>Badges</h1>
+        <p style={{ fontSize: '0.875rem', marginTop: '0.25rem', color: 'var(--bd-ink-mute)' }}>Achievements earned through your sightings and exploration.</p>
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.75rem' }}>
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-20 rounded-3xl animate-pulse" style={{ backgroundColor: 'var(--bd-rule-soft)' }} />
+            <div key={i} style={{ height: 80, borderRadius: '1.5rem', background: 'var(--bd-rule-soft)' }} className="animate-pulse" />
           ))}
         </div>
       ) : badges.length === 0 ? (
-        <div className="rounded-3xl border border-gray-200 bg-white shadow-sm px-6 py-12 text-center">
-          <p className="text-sm font-medium" style={{ color: 'var(--bd-ink)' }}>No badges yet</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--bd-ink-soft)' }}>Log your first sighting to start earning.</p>
+        <div style={{ background: 'var(--bd-card)', border: '1px solid var(--bd-rule)', borderRadius: '1.5rem', padding: '3rem 1.5rem', textAlign: 'center' }}>
+          <p style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--bd-ink)' }}>No badges yet</p>
+          <p style={{ fontSize: '0.875rem', marginTop: '0.25rem', color: 'var(--bd-ink-mute)' }}>Log your first sighting to start earning.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '0.75rem' }}>
           {badges.map((item) => <BadgeCard key={item.badge.id} item={item} />)}
         </div>
       )}

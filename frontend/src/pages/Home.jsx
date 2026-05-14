@@ -19,6 +19,13 @@ function formatCount(value) {
   return value.toLocaleString()
 }
 
+function greeting() {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning,'
+  if (h < 18) return 'Good afternoon,'
+  return 'Good evening,'
+}
+
 function formatDate(value) {
   return new Date(value).toLocaleDateString(undefined, {
     year: 'numeric',
@@ -574,7 +581,7 @@ export default function Home() {
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6" style={{ backgroundColor: 'var(--bd-bg)', color: 'var(--bd-ink)' }}>
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-semibold" style={{ color: 'var(--bd-moss)' }}>Good morning,</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--bd-moss)' }}>{greeting()}</p>
           <h1 className="text-3xl font-semibold" style={{ color: 'var(--bd-ink)' }}>{user?.username || 'Wildr user'}</h1>
           <p className="mt-2 text-sm" style={{ color: 'var(--bd-ink-soft)', maxWidth: '320px' }}>
             {weather
@@ -618,8 +625,8 @@ export default function Home() {
                 <div className="text-3xl font-bold" style={{ color: 'var(--bd-moss-deep)' }}>{formatCount(savedLocations.length)}</div>
                 <div className="text-xs font-semibold uppercase tracking-wide mt-2" style={{ color: 'var(--bd-ink-soft)' }}>Saved places</div>
                 <div className="mt-3 flex justify-center gap-2 text-[11px]">
-                  <span className="rounded-full px-2 py-1 bg-green-100 text-green-700">Want {formatCount(wantToVisitCount)}</span>
-                  <span className="rounded-full px-2 py-1 bg-slate-100 text-slate-700">Visited {formatCount(visitedCount)}</span>
+                  <span style={{ borderRadius: '999px', padding: '2px 8px', background: 'var(--bd-bg)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-mute)', fontSize: 'inherit' }}>Want {formatCount(wantToVisitCount)}</span>
+                  <span style={{ borderRadius: '999px', padding: '2px 8px', background: 'var(--bd-moss)', color: '#fff', fontSize: 'inherit' }}>Visited {formatCount(visitedCount)}</span>
                 </div>
               </div>
             </div>

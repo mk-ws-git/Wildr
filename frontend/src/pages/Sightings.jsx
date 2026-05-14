@@ -56,6 +56,13 @@ export default function Sightings() {
         My Sightings
       </h1>
 
+      {!loading && (
+        <p style={{ fontSize: '0.8rem', color: 'var(--bd-ink-mute)', marginBottom: '0.75rem' }}>
+          {visible.length} {visible.length === 1 ? 'sighting' : 'sightings'}
+          {filter ? ` · ${FILTERS.find(f => f.value === filter)?.label}` : ''}
+        </p>
+      )}
+
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         {FILTERS.map(f => (
           <button
@@ -78,7 +85,11 @@ export default function Sightings() {
       </div>
 
       {loading && (
-        <p style={{ color: 'var(--bd-ink-mute)' }}>Loading…</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} style={{ height: 80, borderRadius: '1rem', background: 'var(--bd-rule-soft)' }} className="animate-pulse" />
+          ))}
+        </div>
       )}
 
       {!loading && visible.length === 0 && (

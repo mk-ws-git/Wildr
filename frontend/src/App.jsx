@@ -20,6 +20,7 @@ import Badges from './pages/Badges'
 import Sightings from './pages/Sightings'
 import api from './api/client'
 import useAuthStore from './store/authStore'
+import { ToastProvider } from './components/Toast'
 
 export default function App() {
   const { token, setUser } = useAuthStore()
@@ -31,7 +32,7 @@ export default function App() {
   }, [token, setUser])
 
   return (
-    <>
+    <ToastProvider>
       <NavBar />
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -51,6 +52,6 @@ export default function App() {
         <Route path="/badges" element={<ProtectedRoute><Badges /></ProtectedRoute>} />
         <Route path="/sightings" element={<ProtectedRoute><Sightings /></ProtectedRoute>} />
       </Routes>
-    </>
+    </ToastProvider>
   )
 }
