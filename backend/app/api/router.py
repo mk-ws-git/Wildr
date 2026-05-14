@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes import health, auth, users, species, sightings, locations, identify, walks, badges, friendships, notifications
+from app.api.routes import health, auth, users, species, sightings, locations, identify, walks, badges, friendships, notifications, greenspaces, water_bodies
 
 api_router = APIRouter()
 
@@ -14,3 +14,5 @@ api_router.include_router(walks.router, prefix="/walks", tags=["walks"])
 api_router.include_router(badges.router)
 api_router.include_router(friendships.router)
 api_router.include_router(notifications.router)
+api_router.include_router(greenspaces.router)
+api_router.include_router(water_bodies.router)
