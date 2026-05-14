@@ -21,8 +21,11 @@ class LocationResponse(BaseModel):
     name: str
     type: str | None
     radius_metres: int | None
+    lat: float | None = None
+    lng: float | None = None
     source: str
     created_by: int | None
     created_at: datetime
+    visited: bool = False
 
     model_config = {"from_attributes": True}

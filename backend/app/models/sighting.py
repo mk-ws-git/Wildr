@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, Text, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Text, Boolean, DateTime, ForeignKey, Numeric, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 from geoalchemy2 import Geography
+from geoalchemy2.shape import to_shape
 from app.models.base import Base
 
 class Sighting(Base):
@@ -16,5 +17,19 @@ class Sighting(Base):
     audio_url = Column(Text)
     waveform_data = Column(JSONB)
     notes = Column(Text)
+    weather_temp_c = Column(Numeric(5, 2))
+    weather_description = Column(String(100))
     is_private = Column(Boolean, default=False)
     identified_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    @property
+    def lat(self) -> float | None:
+        if self.location is None:
+            return None
+        return float(to_shape(self.location).y)
+
+    @property
+    def lng(self) -> float | None:
+        if self.location is None:
+            return None
+        return float(to_shape(self.location).x)

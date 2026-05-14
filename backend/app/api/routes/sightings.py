@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 from app.models.sighting import Sighting
-from app.schemas.sighting import SightingCreate, SightingResponse
+from app.models.species import Species
+from app.schemas.sighting import SightingCreate, SightingResponse, SightingWithSpecies
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.database import get_db
+from app.services.weather import fetch_weather
 
 router = APIRouter()
 
@@ -17,8 +19,10 @@ async def create_sighting(
     db: AsyncSession = Depends(get_db),
 ):
     point = None
+    weather = None
     if body.lat is not None and body.lng is not None:
         point = f"SRID=4326;POINT({body.lng} {body.lat})"
+        weather = await fetch_weather(body.lat, body.lng)
 
     sighting = Sighting(
         user_id=current_user.id,
@@ -26,6 +30,9 @@ async def create_sighting(
         location_id=body.location_id,
         location=point,
         notes=body.notes,
+        weather_temp_c=weather["temp_c"] if weather else None,
+        weather_description=weather["description"] if weather else None,
+        weather_data=weather,
     )
     db.add(sighting)
     await db.commit()
@@ -33,17 +40,38 @@ async def create_sighting(
     return sighting
 
 
-@router.get("/me", response_model=list[SightingResponse])
+@router.get("/me", response_model=list[SightingWithSpecies])
 async def my_sightings(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
 ):
     result = await db.execute(
-        select(Sighting)
+        select(
+            Sighting,
+            Species.common_name,
+            Species.scientific_name,
+            Species.kingdom,
+            Species.rarity_tier,
+        )
+        .join(Species, Sighting.species_id == Species.id)
         .where(Sighting.user_id == current_user.id)
         .order_by(Sighting.identified_at.desc())
+        .limit(limit)
+        .offset(offset)
     )
-    return result.scalars().all()
+    rows = result.all()
+    return [
+        SightingWithSpecies(
+            **SightingResponse.model_validate(row.Sighting).model_dump(),
+            common_name=row.common_name,
+            scientific_name=row.scientific_name,
+            kingdom=row.kingdom,
+            rarity_tier=row.rarity_tier,
+        )
+        for row in rows
+    ]
 
 
 @router.get("/nearby", response_model=list[SightingResponse])

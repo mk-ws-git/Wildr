@@ -10,6 +10,7 @@ class WaterBodyPin(BaseModel):
     lat: float
     lng: float
     area_sqm: float | None
+    geojson: str | None = None
 
     model_config = {"from_attributes": True}
 

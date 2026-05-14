@@ -1,1 +1,25 @@
 @import "tailwindcss";
+
+:root {
+  --bd-bg: #f7f4ed;
+  --bd-bg-soft: #efeadf;
+  --bd-card: #ffffff;
+  --bd-ink: #1f261a;
+  --bd-ink-soft: #5a6451;
+  --bd-ink-mute: rgba(31, 38, 26, 0.55);
+  --bd-moss: #5a6e4a;
+  --bd-moss-deep: #3d4a32;
+  --bd-terra: #c46742;
+  --bd-rule: rgba(31, 38, 26, 0.10);
+  --bd-rule-soft: rgba(31, 38, 26, 0.06);
+  --bd-sans: "Inter", "Helvetica Neue", system-ui, sans-serif;
+}
+
+* {
+  font-family: var(--bd-sans);
+}
+
+body {
+  background-color: var(--bd-bg);
+  color: var(--bd-ink);
+}

@@ -12,5 +12,12 @@ class SpeciesResponse(BaseModel):
     habitat: str | None
     behaviour: str | None
     seasonal_note: str | None
+    photos: list[str] = []
+    audio_urls: list[str] = []
 
     model_config = {"from_attributes": True}
+
+
+class SpeciesListItem(SpeciesResponse):
+    saved: bool = False
+    seen: bool = False

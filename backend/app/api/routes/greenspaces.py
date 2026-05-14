@@ -26,13 +26,15 @@ async def nearby_greenspaces(
             SELECT
                 id, name, type, area_sqm,
                 ST_Y(centre_point::geometry) AS lat,
-                ST_X(centre_point::geometry) AS lng
+                ST_X(centre_point::geometry) AS lng,
+                ST_AsGeoJSON(geometry) AS geojson
             FROM greenspaces
             WHERE ST_DWithin(
                 centre_point,
                 ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
                 :radius
             )
+            AND name IS NOT NULL AND name != ''
             ORDER BY area_sqm DESC NULLS LAST
             LIMIT :limit
         """),

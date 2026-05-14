@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from app.core.config import settings
 from app.core.deps import get_current_user
 from app.database import get_db
 from app.models.user import User
@@ -17,7 +18,14 @@ from app.utils.inat import identify_photo
 from app.utils.gbif import get_species_data
 from app.utils.claude_enrich import enrich_species
 from app.utils.r2 import upload_file
-from app.utils.birdnet import analyze_audio
+from app.utils.birdnet import analyze_audio as _birdnet_analyze
+from app.utils.claude_audio import analyze_audio_claude as _claude_analyze
+
+
+async def analyze_audio(audio_bytes: bytes) -> list[dict]:
+    if settings.USE_BIRDNET:
+        return await _birdnet_analyze(audio_bytes)
+    return await _claude_analyze(audio_bytes)
 from app.utils.waveform import generate_waveform
 
 router = APIRouter()

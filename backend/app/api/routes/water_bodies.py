@@ -26,13 +26,15 @@ async def nearby_water_bodies(
             SELECT
                 id, name, type, water_subtype, is_swimming_spot, area_sqm,
                 ST_Y(centre_point::geometry) AS lat,
-                ST_X(centre_point::geometry) AS lng
+                ST_X(centre_point::geometry) AS lng,
+                ST_AsGeoJSON(geometry) AS geojson
             FROM water_bodies
             WHERE ST_DWithin(
                 centre_point,
                 ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
                 :radius
             )
+            AND name IS NOT NULL AND name != ''
             {swimming_filter}
             ORDER BY area_sqm DESC NULLS LAST
             LIMIT :limit

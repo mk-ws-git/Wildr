@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, Enum
+from sqlalchemy.dialects.postgresql import JSONB
 from app.models.base import Base
 
 class Species(Base):
@@ -25,3 +26,5 @@ class Species(Base):
     habitat = Column(Text)
     behaviour = Column(Text)
     seasonal_note = Column(Text)
+    photos = Column(JSONB, nullable=False, server_default="'[]'")
+    audio_urls = Column(JSONB, nullable=False, server_default="'[]'")

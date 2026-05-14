@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://localhost/wildr"
     SECRET_KEY: str = "change_me_in_production"
 
+    USE_BIRDNET: bool = False
+
     INAT_API_TOKEN: str = ""
     ANTHROPIC_API_KEY: str = ""
     MAPBOX_TOKEN: str = ""
