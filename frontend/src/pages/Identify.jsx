@@ -255,6 +255,7 @@ function PhotoTab({ coords }) {
   return (
     <div className="space-y-4">
       {mode === null && (
+        <>
         <div
           className="grid grid-cols-2 gap-3"
           style={{ paddingTop: '8px' }}
@@ -281,6 +282,10 @@ function PhotoTab({ coords }) {
             <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           </label>
         </div>
+        <p style={{ fontSize: '0.78rem', color: 'var(--bd-ink-mute)', textAlign: 'center', marginTop: '0.5rem' }}>
+          Bird ID only for now — plants, fungi, mammals and more coming soon.
+        </p>
+        </>
       )}
 
       {mode === 'camera' && (

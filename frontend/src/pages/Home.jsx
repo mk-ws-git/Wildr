@@ -205,6 +205,7 @@ export default function Home() {
   const [mapLoading, setMapLoading] = useState(true)
   const [weather, setWeather] = useState(null)
   const [heroPhoto, setHeroPhoto] = useState(null)
+  const [noLocation, setNoLocation] = useState(false)
   const [showCommunitySightings, setShowCommunitySightings] = useState(true)
   const [showPersonalSightings, setShowPersonalSightings] = useState(true)
   const [showSavedPlaces, setShowSavedPlaces] = useState(true)
@@ -492,20 +493,14 @@ export default function Home() {
       mapRef.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
 
       const fetchWeather = (lat, lng) => {
-        fetch(`/api/weather?lat=${lat}&lng=${lng}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        })
-          .then(r => r.json())
-          .then(d => { if (!d.error) setWeather(d) })
+        api.get(`/weather?lat=${lat}&lng=${lng}`)
+          .then(res => { if (!res.data.error) setWeather(res.data) })
           .catch(() => {})
       }
 
       const fetchHeroPhoto = (lat, lng) => {
-        fetch(`/api/photos/daily?lat=${lat}&lng=${lng}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        })
-          .then(r => r.json())
-          .then(d => { if (d.photo_url) setHeroPhoto(d) })
+        api.get(`/photos/daily?lat=${lat}&lng=${lng}`)
+          .then(res => { if (res.data.photo_url) setHeroPhoto(res.data) })
           .catch(() => {})
       }
 
@@ -531,6 +526,7 @@ export default function Home() {
         () => {
           if (!storedLat) {
             loadPins(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng)
+            setNoLocation(true)
             setMapLoading(false)
           }
         }
@@ -679,6 +675,16 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+              ) : noLocation ? (
+                <div className="mt-4">
+                  <Link
+                    to="/profile"
+                    className="text-sm underline underline-offset-2"
+                    style={{ color: 'rgba(255,255,255,0.55)' }}
+                  >
+                    Set your location in Profile for weather
+                  </Link>
+                </div>
               ) : (
                 <div className="mt-4 flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
                   <div className="w-6 h-6 rounded-full border-2 border-current opacity-40 animate-pulse" />
@@ -721,6 +727,21 @@ export default function Home() {
                   <path d="M19 10a7 7 0 0 1-14 0"/>
                   <path d="M12 19v4"/>
                   <path d="M8 23h8"/>
+                </svg>
+              </Link>
+              <Link
+                to="/log"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition hover:scale-105"
+                style={{
+                  background: 'rgba(255,255,255,0.18)',
+                  border: '1px solid rgba(255,255,255,0.30)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }}
+                title="Log a sighting"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14M5 12h14"/>
                 </svg>
               </Link>
             </div>
@@ -861,7 +882,7 @@ export default function Home() {
                 <h2 className="text-base font-semibold" style={{ color: 'var(--bd-ink)' }}>This week in nature</h2>
                 <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>Recent activity near you</p>
               </div>
-              <span className="text-sm font-semibold" style={{ color: 'var(--bd-terra)' }}>see all</span>
+              <Link to="/sightings" className="text-sm font-semibold" style={{ color: 'var(--bd-terra)', textDecoration: 'none' }}>see all</Link>
             </div>
             <div className="rounded-2xl p-4 flex items-center gap-4" style={{ backgroundColor: 'var(--bd-bg-soft)' }}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(196,103,66,0.15)' }}>
@@ -880,6 +901,7 @@ export default function Home() {
                 <h2 className="text-base font-semibold" style={{ color: 'var(--bd-ink)' }}>Recently within 1 mile</h2>
                 <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>Latest sightings nearby</p>
               </div>
+              <Link to="/sightings" className="text-sm font-semibold" style={{ color: 'var(--bd-moss)', textDecoration: 'none', flexShrink: 0 }}>View all</Link>
             </div>
             <div className="space-y-3">
               {loading ? (
@@ -889,7 +911,9 @@ export default function Home() {
               ) : sightings.length === 0 ? (
                 <div className="flex flex-col items-center py-6 gap-3">
                   <PineTrees size="sm" />
-                  <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>Head out and identify some species!</p>
+                  <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>
+                    Head out and <Link to="/log" style={{ color: 'var(--bd-moss)', textDecoration: 'none', fontWeight: 600 }}>log a sighting</Link>!
+                  </p>
                 </div>
               ) : (
                 sightings.slice(0, 3).map((sighting) => (
@@ -928,7 +952,10 @@ export default function Home() {
           </div>
 
           <div className="rounded-3xl p-6 shadow-sm" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--bd-ink)' }}>Community</h2>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--bd-ink)' }}>Community</h2>
+              <Link to="/friends" className="text-sm font-semibold" style={{ color: 'var(--bd-moss)', textDecoration: 'none' }}>View all</Link>
+            </div>
             <p className="text-sm mb-5" style={{ color: 'var(--bd-ink-soft)' }}>Friends and requests</p>
             <div className="space-y-3">
               <div className="rounded-2xl p-4" style={{ backgroundColor: 'rgba(90,110,74,0.08)' }}>
@@ -943,6 +970,31 @@ export default function Home() {
                 <div className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--bd-ink-soft)' }}>Outgoing requests</div>
                 <div className="text-2xl font-bold mt-2" style={{ color: 'var(--bd-ink)' }}>{formatCount(outgoingRequests.length)}</div>
               </div>
+              <Link
+                to="/friends"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  padding: '0.625rem 1rem',
+                  borderRadius: '999px',
+                  background: 'var(--bd-moss)',
+                  color: '#fff',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  marginTop: '0.25rem',
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Invite friends
+              </Link>
             </div>
           </div>
         </aside>

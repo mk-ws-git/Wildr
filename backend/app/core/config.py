@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:5173"
     ANTHROPIC_API_KEY: str = ""
     MAPBOX_TOKEN: str = ""
+    OPENWEATHER_API_KEY: str = ""
     R2_ACCOUNT_ID: str = ""
     R2_ACCESS_KEY_ID: str = ""
     R2_SECRET_ACCESS_KEY: str = ""

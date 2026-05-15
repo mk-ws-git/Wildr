@@ -20,6 +20,7 @@ class Sighting(Base):
     notes = Column(Text)
     weather_temp_c = Column(Numeric(5, 2))
     weather_description = Column(String(100))
+    weather_data = Column(JSONB)
     is_private = Column(Boolean, default=False)
     identified_at = Column(DateTime(timezone=True), server_default=func.now())
 

@@ -128,15 +128,15 @@ function ViewTab({ user, recentSightings, allSightings, badges, friendships, sav
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
         {[
-          { label: 'Sightings', count: recentSightings.length },
-          { label: 'Badges', count: badges.length },
-          { label: 'Friends', count: acceptedFriends.length },
-          { label: 'Saved places', count: savedLocations.length },
-        ].map(({ label, count }) => (
-          <div key={label} style={{ ...card, padding: '1rem 1.25rem' }}>
+          { label: 'Sightings', count: recentSightings.length, to: '/sightings' },
+          { label: 'Badges', count: badges.length, to: '/badges' },
+          { label: 'Friends', count: acceptedFriends.length, to: '/friends' },
+          { label: 'Saved places', count: savedLocations.length, to: '/map' },
+        ].map(({ label, count, to }) => (
+          <Link key={label} to={to} style={{ ...card, padding: '1rem 1.25rem', textDecoration: 'none', color: 'inherit', display: 'block' }}>
             <p style={muted}>{label}</p>
             <p style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--bd-moss)', marginTop: '0.4rem', lineHeight: 1 }}>{loading ? '—' : count}</p>
-          </div>
+          </Link>
         ))}
       </div>
 

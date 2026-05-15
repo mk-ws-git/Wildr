@@ -47,10 +47,21 @@ function BellIcon({ count }) {
   )
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+  return isMobile
+}
+
 export default function NavBar() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
+  const isMobile = useIsMobile()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [bellOpen, setBellOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -90,10 +101,7 @@ export default function NavBar() {
     navigate('/login')
   }
 
-  const openBell = async () => {
-    setBellOpen(o => !o)
-    setDropdownOpen(false)
-  }
+  const unreadCount = notifications.filter(n => !n.is_read).length
 
   const markAllRead = async () => {
     try {
@@ -109,7 +117,15 @@ export default function NavBar() {
     } catch { /* silent */ }
   }
 
-  const unreadCount = notifications.filter(n => !n.is_read).length
+  const timeAgo = (iso) => {
+    const diff = Date.now() - new Date(iso).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'just now'
+    if (mins < 60) return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs}h ago`
+    return `${Math.floor(hrs / 24)}d ago`
+  }
 
   const linkStyle = (isActive) => ({
     fontSize: '0.875rem',
@@ -121,29 +137,17 @@ export default function NavBar() {
     transition: 'color 0.15s, border-color 0.15s',
   })
 
-  const timeAgo = (iso) => {
-    const diff = Date.now() - new Date(iso).getTime()
-    const mins = Math.floor(diff / 60000)
-    if (mins < 1) return 'just now'
-    if (mins < 60) return `${mins}m ago`
-    const hrs = Math.floor(mins / 60)
-    if (hrs < 24) return `${hrs}h ago`
-    return `${Math.floor(hrs / 24)}d ago`
-  }
-
   return (
     <header style={{ position: 'sticky', top: 0, zIndex: 100 }}>
-      <nav
-        style={{
-          background: 'var(--bd-bg)',
-          borderBottom: '1px solid var(--bd-rule)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1.5rem',
-          padding: '0 1.25rem',
-          height: 48,
-        }}
-      >
+      <nav style={{
+        background: 'var(--bd-bg)',
+        borderBottom: '1px solid var(--bd-rule)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1.5rem',
+        padding: '0 1.25rem',
+        height: 48,
+      }}>
         {/* Wordmark */}
         <Link
           to="/"
@@ -153,21 +157,23 @@ export default function NavBar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden sm:flex items-center gap-6" style={{ flex: 1 }}>
-          {NAV_LINKS.map(({ to, label, end }) => (
-            <NavLink key={to} to={to} end={end} style={({ isActive }) => linkStyle(isActive)}>
-              {label}
-            </NavLink>
-          ))}
-        </div>
+        {!isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1 }}>
+            {NAV_LINKS.map(({ to, label, end }) => (
+              <NavLink key={to} to={to} end={end} style={({ isActive }) => linkStyle(isActive)}>
+                {label}
+              </NavLink>
+            ))}
+          </div>
+        )}
 
-        {/* Desktop: bell + user dropdown */}
-        {user && (
-          <div className="hidden sm:flex items-center gap-2 ml-auto">
+        {/* Desktop right: bell + user dropdown */}
+        {!isMobile && user && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
             {/* Notification bell */}
             <div style={{ position: 'relative' }} ref={bellRef}>
               <button
-                onClick={openBell}
+                onClick={() => { setBellOpen(o => !o); setDropdownOpen(false) }}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: 36, height: 36, borderRadius: '50%',
@@ -198,28 +204,28 @@ export default function NavBar() {
                     <p style={{ padding: '2rem 1rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--bd-ink-mute)' }}>No notifications yet</p>
                   ) : (
                     <>
-                    {notifications.map(n => (
-                      <div
-                        key={n.id}
-                        onClick={() => markRead(n.id)}
-                        style={{
-                          padding: '10px 16px',
-                          borderBottom: '1px solid var(--bd-rule-soft)',
-                          cursor: 'pointer',
-                          background: n.is_read ? 'transparent' : 'var(--bd-bg-soft, #f8faf8)',
-                          display: 'flex', alignItems: 'flex-start', gap: 10,
-                        }}
-                      >
-                        {!n.is_read && (
-                          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--bd-moss)', flexShrink: 0, marginTop: 5 }} />
-                        )}
-                        <div style={{ flex: 1, paddingLeft: n.is_read ? 17 : 0 }}>
-                          <p style={{ fontSize: '0.8rem', color: 'var(--bd-ink)', margin: 0, lineHeight: 1.4 }}>{notificationMessage(n)}</p>
-                          <p style={{ fontSize: '0.7rem', color: 'var(--bd-ink-mute)', margin: '3px 0 0' }}>{timeAgo(n.created_at)}</p>
+                      {notifications.map(n => (
+                        <div
+                          key={n.id}
+                          onClick={() => markRead(n.id)}
+                          style={{
+                            padding: '10px 16px',
+                            borderBottom: '1px solid var(--bd-rule-soft)',
+                            cursor: 'pointer',
+                            background: n.is_read ? 'transparent' : 'var(--bd-bg-soft, #f8faf8)',
+                            display: 'flex', alignItems: 'flex-start', gap: 10,
+                          }}
+                        >
+                          {!n.is_read && (
+                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--bd-moss)', flexShrink: 0, marginTop: 5 }} />
+                          )}
+                          <div style={{ flex: 1, paddingLeft: n.is_read ? 17 : 0 }}>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--bd-ink)', margin: 0, lineHeight: 1.4 }}>{notificationMessage(n)}</p>
+                            <p style={{ fontSize: '0.7rem', color: 'var(--bd-ink-mute)', margin: '3px 0 0' }}>{timeAgo(n.created_at)}</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                    <Link to="/notifications" onClick={() => setBellOpen(false)} style={{ display: 'block', padding: '10px 16px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--bd-moss)', textDecoration: 'none', textAlign: 'center', borderTop: '1px solid var(--bd-rule)' }}>View all notifications</Link>
+                      ))}
+                      <Link to="/notifications" onClick={() => setBellOpen(false)} style={{ display: 'block', padding: '10px 16px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--bd-moss)', textDecoration: 'none', textAlign: 'center', borderTop: '1px solid var(--bd-rule)' }}>View all notifications</Link>
                     </>
                   )}
                 </div>
@@ -249,16 +255,13 @@ export default function NavBar() {
               </button>
 
               {dropdownOpen && (
-                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, width: 176, borderRadius: '1rem', padding: '4px 0', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', background: 'var(--bd-card)', border: '1px solid var(--bd-rule)', zIndex: 200 }}>
+                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, width: 160, borderRadius: '1rem', padding: '4px 0', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', background: 'var(--bd-card)', border: '1px solid var(--bd-rule)', zIndex: 200 }}>
                   {[
                     { to: '/profile', label: 'Profile' },
-                    { to: '/sightings', label: 'My Sightings' },
-                    { to: '/log-sighting', label: 'Log a Sighting' },
-                    { to: '/friends', label: 'Friends' },
-                    { to: '/badges', label: 'Badges' },
                     { to: '/settings', label: 'Settings' },
                   ].map(({ to, label }) => (
-                    <Link key={to} to={to} onClick={() => setDropdownOpen(false)} style={{ display: 'block', padding: '8px 16px', fontSize: '0.875rem', color: 'var(--bd-ink)', textDecoration: 'none' }}
+                    <Link key={to} to={to} onClick={() => setDropdownOpen(false)}
+                      style={{ display: 'block', padding: '8px 16px', fontSize: '0.875rem', color: 'var(--bd-ink)', textDecoration: 'none' }}
                       onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
                       onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                     >{label}</Link>
@@ -274,26 +277,27 @@ export default function NavBar() {
         )}
 
         {/* Mobile: hamburger */}
-        <button
-          className="sm:hidden ml-auto"
-          onClick={() => setMobileOpen(o => !o)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--bd-ink)' }}
-          aria-label="Menu"
-        >
-          {mobileOpen ? (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M4 4l12 12M16 4L4 16"/>
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M3 5h14M3 10h14M3 15h14"/>
-            </svg>
-          )}
-        </button>
+        {isMobile && (
+          <button
+            onClick={() => setMobileOpen(o => !o)}
+            style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--bd-ink)' }}
+            aria-label="Menu"
+          >
+            {mobileOpen ? (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M4 4l12 12M16 4L4 16"/>
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M3 5h14M3 10h14M3 15h14"/>
+              </svg>
+            )}
+          </button>
+        )}
       </nav>
 
       {/* Mobile menu */}
-      {mobileOpen && (
+      {isMobile && mobileOpen && (
         <div style={{ background: 'var(--bd-bg)', borderBottom: '1px solid var(--bd-rule)', padding: '0.75rem 1.25rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
           {NAV_LINKS.map(({ to, label, end }) => (
             <NavLink key={to} to={to} end={end} style={({ isActive }) => ({ ...linkStyle(isActive), border: 'none', display: 'block', padding: '0.625rem 0', borderBottom: 'none', borderTop: '1px solid var(--bd-rule-soft)' })}>
@@ -303,17 +307,10 @@ export default function NavBar() {
           {user && (
             <>
               <div style={{ borderTop: '1px solid var(--bd-rule)', margin: '0.5rem 0 0.25rem' }} />
-              {[
-                { to: '/profile', label: 'Profile' },
-                { to: '/sightings', label: 'My Sightings' },
-                { to: '/log-sighting', label: 'Log a Sighting' },
-                { to: '/friends', label: 'Friends' },
-                { to: '/badges', label: 'Badges' },
-              ].map(({ to, label }) => (
-                <Link key={to} to={to} style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', textDecoration: 'none', padding: '0.625rem 0', display: 'block' }}>{label}</Link>
-              ))}
+              <Link to="/profile" style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', textDecoration: 'none', padding: '0.625rem 0', display: 'block' }}>Profile</Link>
+              <Link to="/settings" style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', textDecoration: 'none', padding: '0.625rem 0', display: 'block' }}>Settings</Link>
               {unreadCount > 0 && (
-                <Link to="/profile" style={{ fontSize: '0.875rem', color: 'var(--bd-terra)', textDecoration: 'none', padding: '0.625rem 0', display: 'block' }}>
+                <Link to="/notifications" style={{ fontSize: '0.875rem', color: 'var(--bd-terra)', textDecoration: 'none', padding: '0.625rem 0', display: 'block' }}>
                   {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
                 </Link>
               )}

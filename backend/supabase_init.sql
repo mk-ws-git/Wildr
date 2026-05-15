@@ -276,6 +276,12 @@ CREATE TABLE public.users (
     hashed_password text NOT NULL,
     avatar_url text,
     bio text,
+    location_name text,
+    location_lat double precision,
+    location_lng double precision,
+    share_sightings_community boolean NOT NULL DEFAULT true,
+    anonymize_community_sightings boolean NOT NULL DEFAULT false,
+    share_sightings_inat boolean NOT NULL DEFAULT false,
     created_at timestamp with time zone DEFAULT now()
 );
 CREATE SEQUENCE public.users_id_seq

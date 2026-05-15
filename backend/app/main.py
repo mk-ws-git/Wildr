@@ -34,6 +34,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:3000",
+        "http://192.168.0.226:5173",
         "https://project-7fn3g.vercel.app",
         "https://*.vercel.app",
     ],
