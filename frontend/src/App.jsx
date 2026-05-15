@@ -19,6 +19,7 @@ import Map from './pages/Map'
 import Badges from './pages/Badges'
 import Sightings from './pages/Sightings'
 import Friends from './pages/Friends'
+import Onboarding from './pages/Onboarding'
 import api from './api/client'
 import useAuthStore from './store/authStore'
 import { ToastProvider } from './components/Toast'
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/identify" element={<ProtectedRoute><Identify /></ProtectedRoute>} />
         <Route path="/species" element={<ProtectedRoute><Species /></ProtectedRoute>} />

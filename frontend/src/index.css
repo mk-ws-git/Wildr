@@ -23,3 +23,8 @@ body {
   background-color: var(--bd-bg);
   color: var(--bd-ink);
 }
+
+.auth-input:focus {
+  border-color: var(--bd-moss) !important;
+  box-shadow: 0 0 0 3px rgba(90, 110, 74, 0.14);
+}
