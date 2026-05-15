@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --bd-bg: #f5f5f5;
-  --bd-bg-soft: #ebebeb;
-  --bd-card: #ffffff;
-  --bd-ink: #18181b;
-  --bd-ink-soft: #52525b;
-  --bd-ink-mute: rgba(24, 24, 27, 0.50);
-  --bd-moss: #2d6a4f;
-  --bd-moss-deep: #1b4332;
-  --bd-terra: #c46742;
-  --bd-rule: rgba(24, 24, 27, 0.10);
-  --bd-rule-soft: rgba(24, 24, 27, 0.06);
+  /* Nordic Wild + Lime */
+  --bd-bg: #f0f2f0;
+  --bd-bg-soft: #e4e8e4;
+  --bd-card: #eaeee9;
+  --bd-ink: #1a2024;
+  --bd-ink-soft: #3d4a4e;
+  --bd-ink-mute: rgba(26, 32, 36, 0.50);
+  --bd-moss: #2c6e5a;
+  --bd-moss-deep: #1a4035;
+  --bd-terra: #8bba2e;          /* lime replaces terracotta */
+  --bd-lime: #8bba2e;           /* alias for semantic clarity */
+  --bd-fjord: #5b7fa6;          /* water / map blue */
+  --bd-rule: rgba(26, 32, 36, 0.10);
+  --bd-rule-soft: rgba(26, 32, 36, 0.06);
   --bd-sans: "Inter", "Helvetica Neue", system-ui, sans-serif;
 }
 
@@ -26,5 +29,5 @@ body {
 
 .auth-input:focus {
   border-color: var(--bd-moss) !important;
-  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.14);
+  box-shadow: 0 0 0 3px rgba(44, 110, 90, 0.14);
 }
