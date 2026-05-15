@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../api/client'
 
 function useGPS() {
@@ -60,7 +61,9 @@ function ResultCard({ result, onReset }) {
         )}
         <div className="p-5 space-y-2">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold" style={{ color: 'var(--bd-ink)' }}>{species.common_name}</h2>
+            <Link to={`/species/${species.id}`} style={{ textDecoration: 'none' }}>
+              <h2 className="text-lg font-semibold hover:underline" style={{ color: 'var(--bd-ink)' }}>{species.common_name}</h2>
+            </Link>
             <span className="text-xs" style={{ color: 'var(--bd-ink-mute)' }}>{Math.round(score * 100)}% match</span>
           </div>
           <p className="text-sm italic" style={{ color: 'var(--bd-ink-soft)' }}>{species.scientific_name}</p>
@@ -98,6 +101,7 @@ function PhotoTab({ coords }) {
   const [imageBlob, setImageBlob] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
   const [locationId, setLocationId] = useState(null)
+  const [placeName, setPlaceName] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
@@ -151,6 +155,7 @@ function PhotoTab({ coords }) {
     form.append('photo', imageBlob, 'photo.jpg')
     if (coords) { form.append('lat', coords.lat); form.append('lng', coords.lng) }
     if (locationId) form.append('location_id', locationId)
+    if (placeName.trim()) form.append('place_name', placeName.trim())
     try {
       const { data } = await api.post('/identify/photo', form)
       setResult(data)
@@ -164,7 +169,7 @@ function PhotoTab({ coords }) {
   const reset = () => {
     stopCamera()
     setMode(null); setImageBlob(null); setPreviewUrl(null)
-    setResult(null); setError(null); setLocationId(null)
+    setResult(null); setError(null); setLocationId(null); setPlaceName('')
   }
 
   if (result) return <ResultCard result={result} onReset={reset} />
@@ -226,6 +231,14 @@ function PhotoTab({ coords }) {
             </button>
           </div>
           <LocationPicker locationId={locationId} setLocationId={setLocationId} />
+          <input
+            type="text"
+            value={placeName}
+            onChange={e => setPlaceName(e.target.value)}
+            placeholder="Place nickname (optional) — e.g. Back garden"
+            className="w-full border border-gray-200 rounded-2xl px-3 py-2 text-sm bg-white"
+            style={{ color: 'var(--bd-ink)' }}
+          />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             onClick={submit}
@@ -247,6 +260,7 @@ function AudioTab({ coords }) {
   const [phase, setPhase] = useState('idle')
   const [detections, setDetections] = useState([])
   const [locationId, setLocationId] = useState(null)
+  const [placeName, setPlaceName] = useState('')
   const [saving, setSaving] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
@@ -317,6 +331,7 @@ function AudioTab({ coords }) {
     form.append('audio', blob, 'recording.webm')
     if (coords) { form.append('lat', coords.lat); form.append('lng', coords.lng) }
     if (locationId) form.append('location_id', locationId)
+    if (placeName.trim()) form.append('place_name', placeName.trim())
     try {
       const { data } = await api.post('/identify/audio', form)
       setResult(data)
@@ -329,7 +344,7 @@ function AudioTab({ coords }) {
 
   const reset = () => {
     setPhase('idle'); setDetections([]); setResult(null)
-    setError(null); setLocationId(null)
+    setError(null); setLocationId(null); setPlaceName('')
     chunksRef.current = []; allChunksRef.current = []
   }
 
@@ -403,6 +418,14 @@ function AudioTab({ coords }) {
       {phase === 'review' && detections.length > 0 && (
         <div className="space-y-3">
           <LocationPicker locationId={locationId} setLocationId={setLocationId} />
+          <input
+            type="text"
+            value={placeName}
+            onChange={e => setPlaceName(e.target.value)}
+            placeholder="Place nickname (optional) — e.g. Back garden"
+            className="w-full border border-gray-200 rounded-2xl px-3 py-2 text-sm bg-white"
+            style={{ color: 'var(--bd-ink)' }}
+          />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             onClick={saveTop}

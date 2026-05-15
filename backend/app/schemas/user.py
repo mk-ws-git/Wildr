@@ -19,6 +19,9 @@ class UserResponse(BaseModel):
     location_name: str | None
     location_lat: float | None
     location_lng: float | None
+    share_sightings_community: bool = True
+    anonymize_community_sightings: bool = False
+    share_sightings_inat: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -29,6 +32,13 @@ class UserUpdate(BaseModel):
     location_name: str | None = None
     location_lat: float | None = None
     location_lng: float | None = None
+    share_sightings_community: bool | None = None
+    anonymize_community_sightings: bool | None = None
+    share_sightings_inat: bool | None = None
+
+class UserPasswordChange(BaseModel):
+    current_password: str
+    new_password: str
 
 class Token(BaseModel):
     access_token: str

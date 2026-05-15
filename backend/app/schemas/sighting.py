@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 
 class SightingCreate(BaseModel):
@@ -8,7 +8,14 @@ class SightingCreate(BaseModel):
     location_id: int | None = None
     lat: float | None = None
     lng: float | None = None
+    place_name: str | None = None
     notes: str | None = None
+
+
+class SightingUpdate(BaseModel):
+    place_name: str | None = None
+    notes: str | None = None
+    location_id: int | None = None
 
 
 class SightingResponse(BaseModel):
@@ -18,6 +25,7 @@ class SightingResponse(BaseModel):
     location_id: int | None
     lat: float | None = None
     lng: float | None = None
+    place_name: str | None = None
     photo_url: str | None
     audio_url: str | None
     waveform_data: list[Any] | None

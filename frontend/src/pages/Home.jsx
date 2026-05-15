@@ -560,9 +560,7 @@ export default function Home() {
       sightings
         .filter((sighting) => sighting.lat != null && sighting.lng != null)
         .forEach((sighting) => {
-          const title = sighting.species?.common_name
-            ? sighting.species.common_name
-            : `Sighting #${sighting.id}`
+          const title = sighting.common_name || `Sighting #${sighting.id}`
           const subtitle = sighting.identified_at
             ? new Date(sighting.identified_at).toLocaleDateString()
             : 'Personal sighting'
@@ -752,13 +750,17 @@ export default function Home() {
                 <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>No recent sightings. Head out and identify some species!</p>
               ) : (
                 sightings.slice(0, 3).map((sighting) => (
-                  <div key={sighting.id} className="rounded-2xl p-4 flex items-center gap-4" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}>
-                    <div className="w-14 h-14 rounded-xl" style={{ backgroundColor: 'var(--bd-bg-soft)' }}></div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-sm" style={{ color: 'var(--bd-ink)' }}>Sighting #{sighting.id}</div>
-                      <div className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>{formatDate(sighting.identified_at)}</div>
+                  <div key={sighting.id} className="rounded-2xl flex items-center gap-0 overflow-hidden" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}>
+                    <div className="w-14 h-14 flex-shrink-0" style={{ backgroundColor: 'var(--bd-bg-soft)' }}>
+                      {sighting.photo_url
+                        ? <img src={sighting.photo_url} alt={sighting.common_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : null}
                     </div>
-                    <div className="text-sm font-semibold" style={{ color: 'var(--bd-moss)' }}>0.3 mi</div>
+                    <div className="flex-1 px-3 py-2">
+                      <div className="font-semibold text-sm" style={{ color: 'var(--bd-ink)' }}>{sighting.common_name || `Sighting #${sighting.id}`}</div>
+                      <div className="text-xs italic" style={{ color: 'var(--bd-ink-mute)' }}>{sighting.scientific_name}</div>
+                      <div className="text-xs" style={{ color: 'var(--bd-ink-soft)' }}>{formatDate(sighting.identified_at)}{sighting.place_name ? ` · ${sighting.place_name}` : ''}</div>
+                    </div>
                   </div>
                 ))
               )}

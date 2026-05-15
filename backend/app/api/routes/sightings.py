@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 from app.models.sighting import Sighting
 from app.models.species import Species
-from app.schemas.sighting import SightingCreate, SightingResponse, SightingWithSpecies
+from app.schemas.sighting import SightingCreate, SightingResponse, SightingUpdate, SightingWithSpecies
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.database import get_db
@@ -29,6 +29,7 @@ async def create_sighting(
         species_id=body.species_id,
         location_id=body.location_id,
         location=point,
+        place_name=body.place_name,
         notes=body.notes,
         weather_temp_c=weather["temp_c"] if weather else None,
         weather_description=weather["description"] if weather else None,
@@ -72,6 +73,44 @@ async def my_sightings(
         )
         for row in rows
     ]
+
+
+@router.patch("/me/{sighting_id}", response_model=SightingResponse)
+async def update_sighting(
+    sighting_id: int,
+    body: SightingUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Sighting).where(Sighting.id == sighting_id, Sighting.user_id == current_user.id)
+    )
+    sighting = result.scalar_one_or_none()
+    if not sighting:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sighting not found")
+    updates = body.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        setattr(sighting, field, value)
+    db.add(sighting)
+    await db.commit()
+    await db.refresh(sighting)
+    return sighting
+
+
+@router.delete("/me/{sighting_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_sighting(
+    sighting_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Sighting).where(Sighting.id == sighting_id, Sighting.user_id == current_user.id)
+    )
+    sighting = result.scalar_one_or_none()
+    if not sighting:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sighting not found")
+    await db.delete(sighting)
+    await db.commit()
 
 
 @router.get("/nearby", response_model=list[SightingResponse])

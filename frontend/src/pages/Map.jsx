@@ -359,9 +359,11 @@ export default function Map() {
       sightings
         .filter((sighting) => sighting.lat != null && sighting.lng != null)
         .forEach((sighting) => {
-          const marker = new mapboxgl.Marker(markerElement('var(--bd-terra)', 'Personal sighting'))
+          const name = sighting.common_name || 'Sighting'
+          const subtitle = sighting.place_name || new Date(sighting.identified_at).toLocaleDateString()
+          const marker = new mapboxgl.Marker(markerElement('var(--bd-terra)', name))
             .setLngLat([sighting.lng, sighting.lat])
-            .setPopup(new mapboxgl.Popup({ offset: 12 }).setText('Personal sighting'))
+            .setPopup(new mapboxgl.Popup({ offset: 12 }).setText(`${name} · ${subtitle}`))
             .addTo(map.current)
           markersRef.current.push(marker)
         })

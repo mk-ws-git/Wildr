@@ -16,6 +16,7 @@ class Sighting(Base):
     photo_url = Column(Text)
     audio_url = Column(Text)
     waveform_data = Column(JSONB)
+    place_name = Column(Text)
     notes = Column(Text)
     weather_temp_c = Column(Numeric(5, 2))
     weather_description = Column(String(100))
