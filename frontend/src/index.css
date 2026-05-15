@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bd-bg: #f7f4ed;
-  --bd-bg-soft: #efeadf;
+  --bd-bg: #f5f5f5;
+  --bd-bg-soft: #ebebeb;
   --bd-card: #ffffff;
-  --bd-ink: #1f261a;
-  --bd-ink-soft: #5a6451;
-  --bd-ink-mute: rgba(31, 38, 26, 0.55);
-  --bd-moss: #5a6e4a;
-  --bd-moss-deep: #3d4a32;
+  --bd-ink: #18181b;
+  --bd-ink-soft: #52525b;
+  --bd-ink-mute: rgba(24, 24, 27, 0.50);
+  --bd-moss: #2d6a4f;
+  --bd-moss-deep: #1b4332;
   --bd-terra: #c46742;
-  --bd-rule: rgba(31, 38, 26, 0.10);
-  --bd-rule-soft: rgba(31, 38, 26, 0.06);
+  --bd-rule: rgba(24, 24, 27, 0.10);
+  --bd-rule-soft: rgba(24, 24, 27, 0.06);
   --bd-sans: "Inter", "Helvetica Neue", system-ui, sans-serif;
 }
 
@@ -26,5 +26,5 @@ body {
 
 .auth-input:focus {
   border-color: var(--bd-moss) !important;
-  box-shadow: 0 0 0 3px rgba(90, 110, 74, 0.14);
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.14);
 }

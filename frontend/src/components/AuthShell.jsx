@@ -60,7 +60,7 @@ export default function AuthShell({ children }) {
           background: 'var(--bd-card)',
           borderRadius: '1.5rem',
           padding: '2rem 2rem 1.75rem',
-          boxShadow: '0 2px 24px rgba(31,38,26,0.09), 0 1px 3px rgba(31,38,26,0.06)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.07), 0 4px 20px rgba(0,0,0,0.08)',
         }}>
           {children}
         </div>

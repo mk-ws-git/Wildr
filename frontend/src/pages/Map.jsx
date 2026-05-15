@@ -170,10 +170,13 @@ export default function Map() {
   useEffect(() => {
     if (map.current) return
 
+    const initLat = user?.location_lat ?? BERLIN_DEFAULT.lat
+    const initLng = user?.location_lng ?? BERLIN_DEFAULT.lng
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [BERLIN_DEFAULT.lng, BERLIN_DEFAULT.lat],
+      center: [initLng, initLat],
       zoom: 13,
     })
 
@@ -195,6 +198,13 @@ export default function Map() {
         }
       })
 
+      const storedLat = user?.location_lat
+      const storedLng = user?.location_lng
+
+      if (storedLat && storedLng) {
+        loadPins(storedLat, storedLng)
+      }
+
       navigator.geolocation?.getCurrentPosition(
         ({ coords }) => {
           const { latitude: lat, longitude: lng } = coords
@@ -203,7 +213,9 @@ export default function Map() {
           loadPins(lat, lng)
         },
         () => {
-          loadPins(BERLIN_DEFAULT.lat, BERLIN_DEFAULT.lng)
+          if (!storedLat) {
+            loadPins(BERLIN_DEFAULT.lat, BERLIN_DEFAULT.lng)
+          }
         }
       )
     })

@@ -487,21 +487,38 @@ export default function Home() {
       })
 
       mapRef.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
+
+      const fetchWeather = (lat, lng) => {
+        fetch(`/api/weather?lat=${lat}&lng=${lng}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        })
+          .then(r => r.json())
+          .then(d => { if (!d.error) setWeather(d) })
+          .catch(() => {})
+      }
+
+      const storedLat = user?.location_lat
+      const storedLng = user?.location_lng
+
+      if (storedLat && storedLng) {
+        mapRef.current.flyTo({ center: [storedLng, storedLat], zoom: 11 })
+        loadPins(storedLat, storedLng)
+        fetchWeather(storedLat, storedLng)
+        setMapLoading(false)
+      }
+
       navigator.geolocation?.getCurrentPosition(
         ({ coords }) => {
           mapRef.current.flyTo({ center: [coords.longitude, coords.latitude], zoom: 11 })
           loadPins(coords.latitude, coords.longitude)
+          fetchWeather(coords.latitude, coords.longitude)
           setMapLoading(false)
-          fetch(`/api/weather?lat=${coords.latitude}&lng=${coords.longitude}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          })
-            .then(r => r.json())
-            .then(d => { if (!d.error) setWeather(d) })
-            .catch(() => {})
         },
         () => {
-          loadPins(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng)
-          setMapLoading(false)
+          if (!storedLat) {
+            loadPins(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng)
+            setMapLoading(false)
+          }
         }
       )
     })

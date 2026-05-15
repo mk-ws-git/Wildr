@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float
 from sqlalchemy.sql import func
 from app.models.base import Base
 
@@ -11,4 +11,7 @@ class User(Base):
     hashed_password = Column(Text, nullable=False)
     avatar_url = Column(Text)
     bio = Column(Text)
+    location_name = Column(Text)
+    location_lat = Column(Float)
+    location_lng = Column(Float)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

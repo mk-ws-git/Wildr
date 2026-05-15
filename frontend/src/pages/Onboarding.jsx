@@ -47,6 +47,11 @@ export default function Onboarding() {
   const [step, setStep] = useState(0)
   const [bio, setBio] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [locationName, setLocationName] = useState('')
+  const [locationLat, setLocationLat] = useState(null)
+  const [locationLng, setLocationLng] = useState(null)
+  const [detectingLocation, setDetectingLocation] = useState(false)
+  const [locationDetected, setLocationDetected] = useState(false)
   const [interests, setInterests] = useState(new Set())
   const [saving, setSaving] = useState(false)
 
@@ -57,12 +62,30 @@ export default function Onboarding() {
       return next
     })
 
+  const detectLocation = () => {
+    if (!navigator.geolocation) return
+    setDetectingLocation(true)
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setLocationLat(coords.latitude)
+        setLocationLng(coords.longitude)
+        setLocationDetected(true)
+        setDetectingLocation(false)
+      },
+      () => setDetectingLocation(false),
+      { timeout: 8000 }
+    )
+  }
+
   const saveProfile = async () => {
     setSaving(true)
     try {
       const updates = {}
       if (bio.trim()) updates.bio = bio.trim()
       if (avatarUrl.trim()) updates.avatar_url = avatarUrl.trim()
+      if (locationName.trim()) updates.location_name = locationName.trim()
+      if (locationLat != null) updates.location_lat = locationLat
+      if (locationLng != null) updates.location_lng = locationLng
       if (Object.keys(updates).length > 0) {
         const { data } = await api.patch('/users/me', updates)
         setUser(data)
@@ -108,7 +131,7 @@ export default function Onboarding() {
         <form onSubmit={handleProfile}>
           <div style={{ marginBottom: '1.5rem' }}>
             <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--bd-ink)', margin: '0 0 0.3rem' }}>About you</h2>
-            <p style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', margin: 0 }}>Tell other naturalists a little about yourself — or skip for now.</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', margin: 0 }}>Set up your profile — or skip for now.</p>
           </div>
 
           <AuthTextarea
@@ -127,6 +150,62 @@ export default function Onboarding() {
             onChange={(e) => setAvatarUrl(e.target.value)}
           />
 
+          {/* Location */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--bd-ink-soft)', marginBottom: '0.5rem' }}>
+              Your location <span style={{ fontWeight: 400, color: 'var(--bd-ink-mute)' }}>(sets map & weather defaults)</span>
+            </p>
+            <button
+              type="button"
+              onClick={detectLocation}
+              disabled={detectingLocation || locationDetected}
+              style={{
+                width: '100%',
+                padding: '0.55rem 0.875rem',
+                borderRadius: '0.625rem',
+                border: `1.5px solid ${locationDetected ? 'var(--bd-moss)' : 'var(--bd-rule)'}`,
+                background: locationDetected ? 'rgba(45,106,79,0.06)' : 'var(--bd-bg)',
+                color: locationDetected ? 'var(--bd-moss)' : 'var(--bd-ink)',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                cursor: detectingLocation || locationDetected ? 'default' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                marginBottom: '0.5rem',
+                transition: 'all 0.15s',
+              }}
+            >
+              {locationDetected ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Location detected
+                </>
+              ) : detectingLocation ? (
+                'Detecting…'
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+                    <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+                    <line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+                  </svg>
+                  Detect my location
+                </>
+              )}
+            </button>
+            <AuthField
+              label="City / place name"
+              id="location"
+              placeholder="e.g. Edinburgh, Scotland"
+              value={locationName}
+              onChange={(e) => setLocationName(e.target.value)}
+            />
+          </div>
+
           <div style={{ marginBottom: '1.25rem' }}>
             <p style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--bd-ink-soft)', marginBottom: '0.6rem' }}>
               Interests <span style={{ fontWeight: 400, color: 'var(--bd-ink-mute)' }}>(optional)</span>
@@ -144,7 +223,7 @@ export default function Onboarding() {
                       padding: '0.5rem 0.75rem',
                       borderRadius: '0.625rem',
                       border: `1.5px solid ${active ? 'var(--bd-moss)' : 'var(--bd-rule)'}`,
-                      background: active ? 'rgba(90,110,74,0.08)' : 'var(--bd-bg)',
+                      background: active ? 'rgba(45,106,79,0.08)' : 'var(--bd-bg)',
                       color: active ? 'var(--bd-moss-deep)' : 'var(--bd-ink)',
                       fontSize: '0.85rem', fontWeight: active ? 600 : 400,
                       cursor: 'pointer', transition: 'all 0.15s',
@@ -171,7 +250,7 @@ export default function Onboarding() {
 
       {step === 2 && (
         <div style={{ textAlign: 'center' }}>
-          <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(90,110,74,0.1)', display: 'grid', placeItems: 'center', margin: '0 auto 1.25rem' }}>
+          <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(45,106,79,0.1)', display: 'grid', placeItems: 'center', margin: '0 auto 1.25rem' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--bd-moss)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12"/>
             </svg>
