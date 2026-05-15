@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     USE_BIRDNET: bool = False
 
     INAT_API_TOKEN: str = ""
+    UNSPLASH_ACCESS_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
     MAPBOX_TOKEN: str = ""
     R2_ACCOUNT_ID: str = ""
