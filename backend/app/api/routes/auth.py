@@ -7,14 +7,19 @@ from sqlalchemy import select
 from app.database import get_db
 from app.models.user import User
 from app.models.password_reset import PasswordReset
+from app.models.invitation import Invitation
 from app.schemas.user import UserCreate, UserLogin, UserResponse, Token
 from app.core.security import hash_password, verify_password
 from app.core.jwt import create_access_token
 
 router = APIRouter()
 
+class RegisterRequest(UserCreate):
+    invite_token: str | None = None
+
+
 @router.post("/register", response_model=UserResponse, status_code=201)
-async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
+async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(
         select(User).where((User.email == data.email) | (User.username == data.username))
     )
@@ -27,6 +32,22 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
         hashed_password=hash_password(data.password)
     )
     db.add(user)
+    await db.flush()  # get user.id before committing
+
+    # Consume the invite token if provided
+    if data.invite_token:
+        inv_result = await db.execute(
+            select(Invitation).where(
+                Invitation.token == data.invite_token,
+                Invitation.status == "pending",
+            )
+        )
+        invite = inv_result.scalar_one_or_none()
+        if invite:
+            invite.status = "accepted"
+            invite.accepted_at = datetime.now(timezone.utc)
+            invite.invitee_id = user.id
+
     await db.commit()
     await db.refresh(user)
     return user

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api/client'
 import useAuthStore from '../store/authStore'
 import AuthShell, { AuthHeading, AuthField, AuthBtn, AuthError, AuthLinks } from '../components/AuthShell'
@@ -10,6 +10,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const { setToken, setUser } = useAuthStore()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const inviteToken = searchParams.get('invite')
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
 
@@ -18,7 +20,9 @@ export default function Register() {
     setError(null)
     setLoading(true)
     try {
-      await api.post('/auth/register', form)
+      const payload = { ...form }
+      if (inviteToken) payload.invite_token = inviteToken
+      await api.post('/auth/register', payload)
       const { data } = await api.post('/auth/login', { username: form.username, password: form.password })
       setToken(data.access_token)
       const me = await api.get('/users/me')
@@ -33,6 +37,23 @@ export default function Register() {
 
   return (
     <AuthShell>
+      {inviteToken && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.6rem',
+          background: 'rgba(44,110,90,0.10)',
+          border: '1px solid rgba(44,110,90,0.22)',
+          borderRadius: '0.75rem',
+          padding: '0.65rem 0.875rem',
+          marginBottom: '1.25rem',
+        }}>
+          <span style={{ fontSize: '1rem' }}>🌿</span>
+          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--bd-moss-deep)', fontWeight: 500 }}>
+            You've been invited to Wildr! Create your account to get started.
+          </p>
+        </div>
+      )}
       <AuthHeading title="Create your account" subtitle="Join Wildr and start spotting wildlife" />
       <AuthError message={error} />
       <form onSubmit={handleSubmit}>

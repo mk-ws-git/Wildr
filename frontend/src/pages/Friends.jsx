@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import api from '../api/client'
 import useAuthStore from '../store/authStore'
+import PineTrees from '../components/PineTrees'
 
 function Avatar({ user, size = 36 }) {
   function initials(name) {
@@ -49,6 +50,167 @@ function Btn({ onClick, children, variant = 'primary', disabled }) {
     >
       {children}
     </button>
+  )
+}
+
+function InvitePanel() {
+  const [email, setEmail] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState(null)
+  const [invites, setInvites] = useState(null)
+  const [showList, setShowList] = useState(false)
+
+  const loadInvites = async () => {
+    try {
+      const { data } = await api.get('/invitations/me')
+      setInvites(data)
+    } catch { /* silent */ }
+  }
+
+  const handleSend = async (e) => {
+    e.preventDefault()
+    if (!email.trim()) return
+    setSending(true); setError(null); setSent(false)
+    try {
+      await api.post('/invitations', { email: email.trim() })
+      setSent(true)
+      setEmail('')
+      loadInvites()
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to send invite.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const toggleList = () => {
+    if (!showList && invites === null) loadInvites()
+    setShowList(v => !v)
+  }
+
+  const pendingCount = invites?.filter(i => i.status === 'pending').length ?? 0
+  const acceptedCount = invites?.filter(i => i.status === 'accepted').length ?? 0
+
+  return (
+    <div style={{
+      background: 'var(--bd-card)',
+      border: '1px solid var(--bd-rule)',
+      borderRadius: '1rem',
+      padding: '1.25rem',
+    }}>
+      {/* Form */}
+      <form onSubmit={handleSend} style={{ display: 'flex', gap: '0.5rem' }}>
+        <input
+          type="email"
+          value={email}
+          onChange={e => { setEmail(e.target.value); setSent(false); setError(null) }}
+          placeholder="friend@example.com"
+          required
+          style={{
+            flex: 1,
+            border: '1px solid var(--bd-rule)',
+            borderRadius: '0.625rem',
+            padding: '0.55rem 0.875rem',
+            fontSize: '0.875rem',
+            background: 'var(--bd-bg)',
+            color: 'var(--bd-ink)',
+            outline: 'none',
+          }}
+        />
+        <button
+          type="submit"
+          disabled={sending}
+          style={{
+            padding: '0.55rem 1.1rem',
+            borderRadius: '0.625rem',
+            background: 'var(--bd-moss)',
+            color: '#fff',
+            border: 'none',
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            cursor: sending ? 'default' : 'pointer',
+            opacity: sending ? 0.6 : 1,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {sending ? '…' : 'Send invite'}
+        </button>
+      </form>
+
+      {/* Feedback */}
+      {sent && (
+        <p style={{ fontSize: '0.82rem', color: 'var(--bd-moss)', marginTop: '0.6rem', fontWeight: 500 }}>
+          ✓ Invite sent! They'll receive an email with a link to join.
+        </p>
+      )}
+      {error && (
+        <p style={{ fontSize: '0.82rem', color: '#b91c1c', marginTop: '0.6rem' }}>{error}</p>
+      )}
+
+      {/* Toggle invite history */}
+      <button
+        onClick={toggleList}
+        style={{
+          marginTop: '0.875rem',
+          background: 'none',
+          border: 'none',
+          padding: 0,
+          cursor: 'pointer',
+          fontSize: '0.78rem',
+          fontWeight: 600,
+          color: 'var(--bd-ink-mute)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.3rem',
+        }}
+      >
+        {showList ? '▲' : '▼'} Your invites
+        {invites !== null && (
+          <span style={{ marginLeft: '0.25rem', color: 'var(--bd-ink-soft)' }}>
+            · {acceptedCount} joined, {pendingCount} pending
+          </span>
+        )}
+      </button>
+
+      {showList && invites !== null && (
+        <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          {invites.length === 0 && (
+            <p style={{ fontSize: '0.82rem', color: 'var(--bd-ink-mute)' }}>No invites sent yet.</p>
+          )}
+          {invites.map(inv => (
+            <div
+              key={inv.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.45rem 0',
+                borderTop: '1px solid var(--bd-rule-soft)',
+                gap: '0.5rem',
+              }}
+            >
+              <span style={{ fontSize: '0.85rem', color: 'var(--bd-ink)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {inv.email}
+              </span>
+              <span style={{
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                padding: '2px 8px',
+                borderRadius: '999px',
+                flexShrink: 0,
+                background: inv.status === 'accepted' ? 'rgba(44,110,90,0.12)' : 'var(--bd-bg-soft)',
+                color: inv.status === 'accepted' ? 'var(--bd-moss)' : 'var(--bd-ink-mute)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}>
+                {inv.status === 'accepted' ? '✓ Joined' : 'Pending'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -123,11 +285,18 @@ export default function Friends() {
     </div>
   )
 
-  if (loading) return <div style={{ padding: '2rem', color: 'var(--bd-ink-mute)' }}>Loading…</div>
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
+      <PineTrees size="md" label="Loading friends…" />
+    </div>
+  )
 
   return (
     <div style={{ maxWidth: 520, margin: '2rem auto', padding: '0 1.25rem' }}>
       <h1 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '1.75rem', color: 'var(--bd-ink)' }}>Friends</h1>
+
+      {/* Invite by email */}
+      {section('Invite someone', <InvitePanel />)}
 
       {/* Search */}
       {section('Find people', (
