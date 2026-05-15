@@ -473,17 +473,20 @@ export default function Home() {
     })
 
     mapRef.current.on('style.load', () => {
-      mapRef.current.setPaintProperty('water', 'fill-color', 'hsl(196, 42%, 74%)')
-      mapRef.current.setPaintProperty('waterway', 'line-color', 'hsl(196, 38%, 68%)')
-      mapRef.current.setPaintProperty('national-park', 'fill-color', 'hsl(122, 22%, 80%)')
-      mapRef.current.setPaintProperty('landuse', 'fill-color', 'hsl(122, 22%, 80%)')
-      mapRef.current.setPaintProperty('building', 'fill-color', 'hsl(80, 4%, 91%)')
-      mapRef.current.setPaintProperty('building', 'fill-outline-color', 'hsl(80, 4%, 86%)')
-      mapRef.current.setPaintProperty('waterway-label', 'text-color', 'hsl(196, 45%, 38%)')
-      mapRef.current.setPaintProperty('water-line-label', 'text-color', 'hsl(196, 45%, 38%)')
-      mapRef.current.setPaintProperty('water-point-label', 'text-color', 'hsl(196, 45%, 38%)')
-      mapRef.current.setPaintProperty('natural-point-label', 'text-color', 'hsl(122, 28%, 38%)')
-      mapRef.current.setPaintProperty('natural-line-label', 'text-color', 'hsl(122, 28%, 38%)')
+      const tryPaint = (id, prop, val) => {
+        if (mapRef.current.getLayer(id)) mapRef.current.setPaintProperty(id, prop, val)
+      }
+      tryPaint('water', 'fill-color', 'hsl(196, 42%, 74%)')
+      tryPaint('waterway', 'line-color', 'hsl(196, 38%, 68%)')
+      tryPaint('national-park', 'fill-color', 'hsl(122, 22%, 80%)')
+      tryPaint('landuse', 'fill-color', 'hsl(122, 22%, 80%)')
+      tryPaint('building', 'fill-color', 'hsl(80, 4%, 91%)')
+      tryPaint('building', 'fill-outline-color', 'hsl(80, 4%, 86%)')
+      tryPaint('waterway-label', 'text-color', 'hsl(196, 45%, 38%)')
+      tryPaint('water-line-label', 'text-color', 'hsl(196, 45%, 38%)')
+      tryPaint('water-point-label', 'text-color', 'hsl(196, 45%, 38%)')
+      tryPaint('natural-point-label', 'text-color', 'hsl(122, 28%, 38%)')
+      tryPaint('natural-line-label', 'text-color', 'hsl(122, 28%, 38%)')
       ;['natural-point-label', 'natural-line-label', 'poi-label'].forEach(id => {
         if (mapRef.current.getLayer(id)) {
           mapRef.current.setLayoutProperty(id, 'visibility', 'none')
@@ -712,7 +715,7 @@ export default function Home() {
                 </svg>
               </Link>
               <Link
-                to="/identify-audio"
+                to="/identify/audio"
                 className="w-12 h-12 rounded-full flex items-center justify-center transition hover:scale-105"
                 style={{
                   background: 'rgba(255,255,255,0.18)',

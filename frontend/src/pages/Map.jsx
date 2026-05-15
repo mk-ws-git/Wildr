@@ -181,17 +181,20 @@ export default function Map() {
     })
 
     map.current.on('style.load', () => {
-      map.current.setPaintProperty('water', 'fill-color', 'hsl(196, 42%, 74%)')
-      map.current.setPaintProperty('waterway', 'line-color', 'hsl(196, 38%, 68%)')
-      map.current.setPaintProperty('national-park', 'fill-color', 'hsl(122, 22%, 80%)')
-      map.current.setPaintProperty('landuse', 'fill-color', 'hsl(122, 22%, 80%)')
-      map.current.setPaintProperty('building', 'fill-color', 'hsl(80, 4%, 91%)')
-      map.current.setPaintProperty('building', 'fill-outline-color', 'hsl(80, 4%, 86%)')
-      map.current.setPaintProperty('waterway-label', 'text-color', 'hsl(196, 45%, 38%)')
-      map.current.setPaintProperty('water-line-label', 'text-color', 'hsl(196, 45%, 38%)')
-      map.current.setPaintProperty('water-point-label', 'text-color', 'hsl(196, 45%, 38%)')
-      map.current.setPaintProperty('natural-point-label', 'text-color', 'hsl(122, 28%, 38%)')
-      map.current.setPaintProperty('natural-line-label', 'text-color', 'hsl(122, 28%, 38%)')
+      const tryPaint = (id, prop, val) => {
+        if (map.current.getLayer(id)) map.current.setPaintProperty(id, prop, val)
+      }
+      tryPaint('water', 'fill-color', 'hsl(196, 42%, 74%)')
+      tryPaint('waterway', 'line-color', 'hsl(196, 38%, 68%)')
+      tryPaint('national-park', 'fill-color', 'hsl(122, 22%, 80%)')
+      tryPaint('landuse', 'fill-color', 'hsl(122, 22%, 80%)')
+      tryPaint('building', 'fill-color', 'hsl(80, 4%, 91%)')
+      tryPaint('building', 'fill-outline-color', 'hsl(80, 4%, 86%)')
+      tryPaint('waterway-label', 'text-color', 'hsl(196, 45%, 38%)')
+      tryPaint('water-line-label', 'text-color', 'hsl(196, 45%, 38%)')
+      tryPaint('water-point-label', 'text-color', 'hsl(196, 45%, 38%)')
+      tryPaint('natural-point-label', 'text-color', 'hsl(122, 28%, 38%)')
+      tryPaint('natural-line-label', 'text-color', 'hsl(122, 28%, 38%)')
       ;['natural-point-label', 'natural-line-label', 'poi-label'].forEach(id => {
         if (map.current.getLayer(id)) {
           map.current.setLayoutProperty(id, 'visibility', 'none')

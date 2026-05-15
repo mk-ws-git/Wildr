@@ -207,7 +207,10 @@ function ViewTab({ user, recentSightings, allSightings, badges, friendships, sav
             )}
           </div>
           <div style={{ ...card, padding: '1.5rem' }}>
-            <h2 style={{ fontSize: '1rem', fontWeight: 600, ...ink, marginBottom: '1rem' }}>Community</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 style={{ fontSize: '1rem', fontWeight: 600, ...ink, margin: 0 }}>Community</h2>
+              <Link to="/friends" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--bd-moss)', textDecoration: 'none' }}>View all</Link>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               {[
                 { label: 'Friends', count: acceptedFriends.length },
@@ -228,7 +231,10 @@ function ViewTab({ user, recentSightings, allSightings, badges, friendships, sav
       <div style={{ ...card, padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1rem', fontWeight: 600, ...ink, margin: 0 }}>Life list</h2>
-          <span style={{ ...muted }}>{loading ? '—' : `${lifeList.length} species`}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ ...muted }}>{loading ? '—' : `${lifeList.length} species`}</span>
+            <Link to="/species" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--bd-moss)', textDecoration: 'none' }}>Browse all</Link>
+          </div>
         </div>
         {loading ? (
           <div style={{ height: 60, background: 'var(--bd-bg)', borderRadius: '0.75rem' }} />

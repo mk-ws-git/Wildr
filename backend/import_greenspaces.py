@@ -21,13 +21,24 @@ class DecimalEncoder(json.JSONEncoder):
 
 load_dotenv(os.path.join(os.path.dirname(__file__), "../.env"))
 
-DATABASE_URL = os.getenv("DATABASE_URL", "").replace(
-    "postgresql+asyncpg://", "postgresql://"
-)
+DATABASE_URL = "postgresql://postgres:2026!wildrdev@db.gsstcquplvnfrmerntsc.supabase.co:5432/postgres"
 
 GEOJSON_PATH = "/Volumes/MK HD/germany-greenspaces.geojson"
 BATCH_SIZE = 500
 MIN_AREA_SQM = 500
+
+# Berlin bounding box — swap for full Germany on real deployment
+BERLIN_MIN_LAT, BERLIN_MAX_LAT = 52.3382, 52.6755
+BERLIN_MIN_LNG, BERLIN_MAX_LNG = 13.0883, 13.7612
+
+
+def in_berlin(geom: dict) -> bool:
+    def check(c):
+        if isinstance(c[0], (int, float, Decimal)):
+            lng, lat = float(c[0]), float(c[1])
+            return BERLIN_MIN_LNG <= lng <= BERLIN_MAX_LNG and BERLIN_MIN_LAT <= lat <= BERLIN_MAX_LAT
+        return any(check(sub) for sub in c)
+    return check(geom.get("coordinates", []))
 
 # Only include these leisure/landuse/boundary values — exclude parking, water, pitches etc.
 VALID_TYPES = {
@@ -91,6 +102,10 @@ def main():
             geom = feature.get("geometry")
 
             if not geom or geom.get("type") not in ("Polygon", "MultiPolygon"):
+                skipped += 1
+                continue
+
+            if not in_berlin(geom):
                 skipped += 1
                 continue
 
