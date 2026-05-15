@@ -1,5 +1,7 @@
 import asyncio
+import io
 import uuid
+from PIL import Image
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -68,6 +70,16 @@ async def identify_photo_route(
     db: AsyncSession = Depends(get_db),
 ):
     image_bytes = await photo.read()
+
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        if img.mode in ('RGBA', 'P', 'LA', 'CMYK'):
+            img = img.convert('RGB')
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=85)
+        image_bytes = buf.getvalue()
+    except Exception:
+        pass
 
     if location_id is not None:
         await _validate_location(db, location_id)
