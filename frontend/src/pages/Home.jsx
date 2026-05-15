@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import api from '../api/client'
 import useAuthStore from '../store/authStore'
 import WeatherIcon from '../components/WeatherIcon'
+import PineTrees from '../components/PineTrees'
 import {
   fetchNearbyGreenspaces,
   fetchNearbyWaterBodies,
@@ -878,7 +879,10 @@ export default function Home() {
                   <div key={idx} className="h-16 rounded-2xl" style={{ backgroundColor: 'var(--bd-bg-soft)' }} />
                 ))
               ) : sightings.length === 0 ? (
-                <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>No recent sightings. Head out and identify some species!</p>
+                <div className="flex flex-col items-center py-6 gap-3">
+                  <PineTrees size="sm" />
+                  <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>Head out and identify some species!</p>
+                </div>
               ) : (
                 sightings.slice(0, 3).map((sighting) => (
                   <div key={sighting.id} className="rounded-2xl flex items-center gap-0 overflow-hidden" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}>

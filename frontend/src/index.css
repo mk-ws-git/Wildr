@@ -31,3 +31,16 @@ body {
   border-color: var(--bd-moss) !important;
   box-shadow: 0 0 0 3px rgba(44, 110, 90, 0.14);
 }
+
+/* ── Pine tree loading animation ──────────────────── */
+.pine-grow   { animation: pineGrow 2.4s ease-in-out infinite; }
+.pine-grow-2 { animation: pineGrow 2.4s ease-in-out 0.38s infinite; }
+.pine-grow-3 { animation: pineGrow 2.4s ease-in-out 0.76s infinite; }
+
+@keyframes pineGrow {
+  0%,  4%  { transform: scaleY(0);    opacity: 0; }
+  16%      { opacity: 1; }
+  48%, 78% { transform: scaleY(1);    opacity: 1; }
+  90%      { opacity: 0.4; }
+  98%,100% { transform: scaleY(0.02); opacity: 0; }
+}
