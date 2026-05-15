@@ -18,12 +18,13 @@ from app.utils.inat import identify_photo
 from app.utils.gbif import get_species_data
 from app.utils.claude_enrich import enrich_species
 from app.utils.r2 import upload_file
-from app.utils.birdnet import analyze_audio as _birdnet_analyze
 from app.utils.claude_audio import analyze_audio_claude as _claude_analyze
 
 
 async def analyze_audio(audio_bytes: bytes) -> list[dict]:
     if settings.USE_BIRDNET:
+        # Lazy import — birdnetlib/TensorFlow only loaded when explicitly enabled
+        from app.utils.birdnet import analyze_audio as _birdnet_analyze
         return await _birdnet_analyze(audio_bytes)
     return await _claude_analyze(audio_bytes)
 from app.utils.waveform import generate_waveform
