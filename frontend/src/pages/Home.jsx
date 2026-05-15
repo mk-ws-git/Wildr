@@ -747,7 +747,15 @@ export default function Home() {
                     >
                       {heroPhoto.photographer}
                     </a>{' '}
-                    / Unsplash
+                    on{' '}
+                    <a
+                      href="https://unsplash.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2 hover:text-white transition"
+                    >
+                      Unsplash
+                    </a>
                   </span>
                 )}
               </p>

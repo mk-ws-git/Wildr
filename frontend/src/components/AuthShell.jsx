@@ -1,25 +1,17 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-
-// Curated Unsplash photo IDs — work as direct CDN img src, no API key needed
-const PANEL_PHOTOS = [
-  'photo-1474511320723-9a56873867b5', // Red fox
-  'photo-1466921583968-f07aa80c526e', // Misty forest dawn
-  'photo-1452570053594-1b985d6ea890', // Deer in woodland
-  'photo-1516934024742-b461fba47600', // Wildflower meadow
-  'photo-1497206365907-f5e630693df0', // Kingfisher
-  'photo-1542276834-cf249e85b2aa', // Hedgehog
-  'photo-1518020382113-a7e8fc38eac9', // Pine forest fog
-]
-
-function panelPhoto() {
-  const seed = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) // changes daily
-  const id = PANEL_PHOTOS[seed % PANEL_PHOTOS.length]
-  return `https://images.unsplash.com/${id}?w=900&q=80&fit=crop`
-}
 
 // Left panel shown on md+ screens
 function NaturePanel() {
-  const url = panelPhoto()
+  const [photo, setPhoto] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/photos/auth-panel')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.photo_url) setPhoto(d) })
+      .catch(() => {})
+  }, [])
+
   return (
     <div
       style={{
@@ -27,21 +19,24 @@ function NaturePanel() {
         width: '52%',
         flexShrink: 0,
         overflow: 'hidden',
+        background: '#0f2a1c',
       }}
     >
       {/* Photo */}
-      <img
-        src={url}
-        alt="Nature"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          objectPosition: 'center',
-        }}
-      />
+      {photo?.photo_url && (
+        <img
+          src={photo.photo_url}
+          alt={photo.description || 'Nature'}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+          }}
+        />
+      )}
       {/* Gradient overlay */}
       <div
         style={{
@@ -77,7 +72,7 @@ function NaturePanel() {
           Wildr
         </div>
 
-        {/* Tagline at bottom */}
+        {/* Tagline + attribution at bottom */}
         <div>
           <p
             style={{
@@ -106,12 +101,35 @@ function NaturePanel() {
             style={{
               fontSize: '0.85rem',
               color: 'rgba(255,255,255,0.62)',
-              margin: 0,
+              margin: '0 0 0.875rem',
               lineHeight: 1.5,
             }}
           >
             Discover the wildlife living right outside your door.
           </p>
+          {/* Unsplash attribution — required by API guidelines */}
+          {photo?.photographer && (
+            <p style={{ margin: 0, fontSize: '0.7rem', color: 'rgba(255,255,255,0.40)', lineHeight: 1.4 }}>
+              Photo by{' '}
+              <a
+                href={photo.photographer_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'underline' }}
+              >
+                {photo.photographer}
+              </a>{' '}
+              on{' '}
+              <a
+                href="https://unsplash.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'underline' }}
+              >
+                Unsplash
+              </a>
+            </p>
+          )}
         </div>
       </div>
     </div>
