@@ -28,6 +28,7 @@ async def _saved_seen_sets(db: AsyncSession, user_id: int) -> tuple[set, set]:
 async def list_species(
     kingdom: str | None = Query(None),
     rarity: str | None = Query(None),
+    conservation_status: str | None = Query(None),
     search: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -37,6 +38,8 @@ async def list_species(
         q = q.where(Species.kingdom == kingdom)
     if rarity:
         q = q.where(Species.rarity_tier == rarity)
+    if conservation_status:
+        q = q.where(Species.conservation_status == conservation_status)
     if search:
         term = f"%{search}%"
         q = q.where(or_(

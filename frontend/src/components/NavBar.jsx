@@ -197,7 +197,8 @@ export default function NavBar() {
                   {notifications.length === 0 ? (
                     <p style={{ padding: '2rem 1rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--bd-ink-mute)' }}>No notifications yet</p>
                   ) : (
-                    notifications.map(n => (
+                    <>
+                    {notifications.map(n => (
                       <div
                         key={n.id}
                         onClick={() => markRead(n.id)}
@@ -217,7 +218,9 @@ export default function NavBar() {
                           <p style={{ fontSize: '0.7rem', color: 'var(--bd-ink-mute)', margin: '3px 0 0' }}>{timeAgo(n.created_at)}</p>
                         </div>
                       </div>
-                    ))
+                    ))}
+                    <Link to="/notifications" onClick={() => setBellOpen(false)} style={{ display: 'block', padding: '10px 16px', fontSize: '0.8rem', fontWeight: 600, color: 'var(--bd-moss)', textDecoration: 'none', textAlign: 'center', borderTop: '1px solid var(--bd-rule)' }}>View all notifications</Link>
+                    </>
                   )}
                 </div>
               )}
@@ -253,6 +256,7 @@ export default function NavBar() {
                     { to: '/log-sighting', label: 'Log a Sighting' },
                     { to: '/friends', label: 'Friends' },
                     { to: '/badges', label: 'Badges' },
+                    { to: '/settings', label: 'Settings' },
                   ].map(({ to, label }) => (
                     <Link key={to} to={to} onClick={() => setDropdownOpen(false)} style={{ display: 'block', padding: '8px 16px', fontSize: '0.875rem', color: 'var(--bd-ink)', textDecoration: 'none' }}
                       onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}

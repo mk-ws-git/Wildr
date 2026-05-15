@@ -21,6 +21,8 @@ import Map from './pages/Map'
 import Badges from './pages/Badges'
 import Sightings from './pages/Sightings'
 import Friends from './pages/Friends'
+import Notifications from './pages/Notifications'
+import Settings from './pages/Settings'
 import Onboarding from './pages/Onboarding'
 import api from './api/client'
 import useAuthStore from './store/authStore'
@@ -74,6 +76,8 @@ export default function App() {
         <Route path="/badges" element={<ProtectedRoute><Badges /></ProtectedRoute>} />
         <Route path="/sightings" element={<ProtectedRoute><Sightings /></ProtectedRoute>} />
         <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       </Routes>
     </ToastProvider>
   )

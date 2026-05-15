@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
+import { useToast } from '../components/Toast'
 
 function useGPS() {
   const [coords, setCoords] = useState(null)
@@ -41,6 +42,17 @@ function LocationPicker({ locationId, setLocationId }) {
 
 function ResultCard({ result, onReset }) {
   const { species, score, uncertain, suggestions, show_endangered_banner, first_sighting, new_badges, photo_url } = result
+  const showToast = useToast()
+  const toastedBadges = useRef(false)
+
+  useEffect(() => {
+    if (!toastedBadges.current && new_badges?.length > 0) {
+      toastedBadges.current = true
+      new_badges.forEach((name, i) => {
+        setTimeout(() => showToast(`Badge unlocked: ${name}`), i * 700)
+      })
+    }
+  }, [new_badges, showToast])
 
   return (
     <div
@@ -78,14 +90,6 @@ function ResultCard({ result, onReset }) {
             style={{ background: 'rgba(44,110,90,0.55)', backdropFilter: 'blur(12px)' }}
           >
             ✓ First sighting — added to your life list
-          </div>
-        )}
-        {new_badges?.length > 0 && (
-          <div
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl text-sm text-white"
-            style={{ background: 'rgba(139,186,46,0.40)', backdropFilter: 'blur(12px)' }}
-          >
-            New badge: {new_badges.join(', ')}
           </div>
         )}
         {show_endangered_banner && (

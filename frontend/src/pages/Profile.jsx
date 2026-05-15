@@ -1,7 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
 import useAuthStore from '../store/authStore'
+
+const KINGDOM_LABEL = {
+  bird: 'Birds', plant: 'Plants', fungi: 'Fungi',
+  insect: 'Insects', mammal: 'Mammals', reptile: 'Reptiles',
+  amphibian: 'Amphibians', fish: 'Fish', other: 'Other',
+}
+const KINGDOM_ORDER = ['bird', 'plant', 'fungi', 'insect', 'mammal', 'reptile', 'amphibian', 'fish', 'other']
 
 function formatDate(value) {
   return new Date(value).toLocaleDateString(undefined, {
@@ -69,10 +76,25 @@ function Toggle({ checked, onChange, label, description }) {
 
 // ── Tab: View ─────────────────────────────────────────────────────────────
 
-function ViewTab({ user, recentSightings, badges, friendships, savedLocations, loading, onEdit }) {
+function ViewTab({ user, recentSightings, allSightings, badges, friendships, savedLocations, lifeList, loading, onEdit }) {
   const acceptedFriends = friendships.filter(f => f.status === 'accepted')
   const pendingRequests = friendships.filter(f => f.status === 'pending' && f.addressee_id === user.id)
   const outgoingRequests = friendships.filter(f => f.status === 'pending' && f.requester_id === user.id)
+
+  const lifeListByKingdom = useMemo(() => {
+    const groups = {}
+    for (const s of lifeList) {
+      const k = s.kingdom || 'other'
+      if (!groups[k]) groups[k] = []
+      groups[k].push(s)
+    }
+    return KINGDOM_ORDER.filter(k => groups[k]).map(k => ({ kingdom: k, items: groups[k] }))
+  }, [lifeList])
+
+  const notedSightings = useMemo(
+    () => (allSightings || []).filter(s => s.notes),
+    [allSightings]
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -201,6 +223,62 @@ function ViewTab({ user, recentSightings, badges, friendships, savedLocations, l
           </div>
         </div>
       </div>
+
+      {/* Life list grouped by kingdom */}
+      <div style={{ ...card, padding: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, ...ink, margin: 0 }}>Life list</h2>
+          <span style={{ ...muted }}>{loading ? '—' : `${lifeList.length} species`}</span>
+        </div>
+        {loading ? (
+          <div style={{ height: 60, background: 'var(--bd-bg)', borderRadius: '0.75rem' }} />
+        ) : lifeList.length === 0 ? (
+          <p style={muted}>
+            No species on your life list yet. <Link to="/identify" style={{ color: 'var(--bd-moss)', textDecoration: 'none' }}>Identify something</Link> to start.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {lifeListByKingdom.map(({ kingdom, items }) => (
+              <div key={kingdom}>
+                <p style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--bd-ink-mute)', marginBottom: '0.5rem' }}>
+                  {KINGDOM_LABEL[kingdom] ?? kingdom} · {items.length}
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  {items.map(s => (
+                    <Link
+                      key={s.id}
+                      to={`/species/${s.id}`}
+                      style={{ padding: '0.3rem 0.75rem', borderRadius: '999px', background: 'var(--bd-bg)', border: '1px solid var(--bd-rule)', fontSize: '0.8rem', color: 'var(--bd-ink)', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                    >
+                      {s.common_name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* My Notes */}
+      {!loading && notedSightings.length > 0 && (
+        <div style={{ ...card, padding: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 600, ...ink, margin: 0 }}>My notes</h2>
+            <Link to="/sightings" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--bd-moss)', textDecoration: 'none' }}>View all</Link>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem', maxHeight: 280, overflowY: 'auto' }}>
+            {notedSightings.map(s => (
+              <div key={s.id} style={{ padding: '0.75rem 0.875rem', background: 'var(--bd-bg)', borderRadius: '0.75rem' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--bd-ink)', margin: '0 0 0.25rem' }}>
+                  {s.common_name} · <span style={muted}>{formatDate(s.identified_at)}</span>
+                </p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--bd-ink-mute)', margin: 0, lineHeight: 1.5 }}>{s.notes}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -446,9 +524,11 @@ export default function Profile() {
   const [user, setUser] = useState(storeUser)
   const [tab, setTab] = useState('view') // 'view' | 'edit' | 'prefs'
   const [recentSightings, setRecentSightings] = useState([])
+  const [allSightings, setAllSightings] = useState([])
   const [badges, setBadges] = useState([])
   const [friendships, setFriendships] = useState([])
   const [savedLocations, setSavedLocations] = useState([])
+  const [lifeList, setLifeList] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => { setUser(storeUser) }, [storeUser])
@@ -458,15 +538,19 @@ export default function Profile() {
     setLoading(true)
     Promise.all([
       api.get('/sightings/me?limit=3').then(r => r.data).catch(() => []),
+      api.get('/sightings/me?limit=100').then(r => r.data).catch(() => []),
       api.get('/badges/me').then(r => r.data).catch(() => []),
       api.get('/friendships/me').then(r => r.data).catch(() => []),
       api.get('/locations/saved').then(r => r.data).catch(() => []),
+      api.get('/users/me/species').then(r => r.data).catch(() => []),
     ])
-      .then(([sightingsData, badgesData, friendshipData, savedData]) => {
+      .then(([sightingsData, allSightingsData, badgesData, friendshipData, savedData, lifeListData]) => {
         setRecentSightings(sightingsData)
+        setAllSightings(allSightingsData)
         setBadges(badgesData)
         setFriendships(friendshipData)
         setSavedLocations(savedData)
+        setLifeList(lifeListData)
       })
       .finally(() => setLoading(false))
   }, [user?.id])
@@ -501,9 +585,11 @@ export default function Profile() {
         <ViewTab
           user={user}
           recentSightings={recentSightings}
+          allSightings={allSightings}
           badges={badges}
           friendships={friendships}
           savedLocations={savedLocations}
+          lifeList={lifeList}
           loading={loading}
           onEdit={() => setTab('edit')}
         />

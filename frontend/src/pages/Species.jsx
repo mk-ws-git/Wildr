@@ -22,6 +22,15 @@ const RARITIES = [
   { value: 'very_rare', label: 'Very rare' },
 ]
 
+const CONSERVATION_FILTERS = [
+  { value: '', label: 'Any status' },
+  { value: 'least_concern', label: 'Least concern' },
+  { value: 'near_threatened', label: 'Near threatened' },
+  { value: 'vulnerable', label: 'Vulnerable' },
+  { value: 'endangered', label: 'Endangered' },
+  { value: 'critically_endangered', label: 'Critically endangered' },
+]
+
 const RARITY_CLS = {
   common: 'bg-gray-100 text-gray-600',
   uncommon: 'bg-emerald-100 text-emerald-700',
@@ -154,6 +163,7 @@ export default function Species() {
   const [loading, setLoading] = useState(true)
   const [kingdom, setKingdom] = useState('')
   const [rarity, setRarity] = useState('')
+  const [conservation, setConservation] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
 
@@ -168,12 +178,13 @@ export default function Species() {
     const params = {}
     if (kingdom) params.kingdom = kingdom
     if (rarity) params.rarity = rarity
+    if (conservation) params.conservation_status = conservation
     if (search) params.search = search
     api.get('/species', { params })
       .then(({ data }) => setSpecies(data))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [kingdom, rarity, search])
+  }, [kingdom, rarity, conservation, search])
 
   const toggleSave = async (s) => {
     const prev = s.saved
@@ -198,7 +209,7 @@ export default function Species() {
         {!loading && (
           <p className="text-sm text-gray-500 mt-0.5">
             {filtered.length} species
-            {(search || kingdom || rarity) ? ' matching filters' : ''}
+            {(search || kingdom || rarity || conservation) ? ' matching filters' : ''}
           </p>
         )}
       </div>
@@ -226,9 +237,16 @@ export default function Species() {
         >
           {RARITIES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select>
-        {(kingdom || rarity || search) && (
+        <select
+          value={conservation}
+          onChange={e => setConservation(e.target.value)}
+          className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+        >
+          {CONSERVATION_FILTERS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+        {(kingdom || rarity || conservation || search) && (
           <button
-            onClick={() => { setKingdom(''); setRarity(''); setSearchInput(''); setSearch('') }}
+            onClick={() => { setKingdom(''); setRarity(''); setConservation(''); setSearchInput(''); setSearch('') }}
             className="text-sm text-gray-500 hover:text-gray-800 px-2"
           >
             Clear
