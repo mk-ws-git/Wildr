@@ -63,6 +63,7 @@ async def identify_photo_route(
     lat: float | None = Form(None),
     lng: float | None = Form(None),
     location_id: int | None = Form(None),
+    place_name: str | None = Form(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -119,6 +120,7 @@ async def identify_photo_route(
         species_id=species.id,
         location_id=location_id,
         location=point,
+        place_name=place_name,
         photo_url=photo_url,
     )
     db.add(sighting)
@@ -152,6 +154,7 @@ async def identify_audio_route(
     lat: float | None = Form(None),
     lng: float | None = Form(None),
     location_id: int | None = Form(None),
+    place_name: str | None = Form(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -212,6 +215,7 @@ async def identify_audio_route(
         species_id=species.id,
         location_id=location_id,
         location=point,
+        place_name=place_name,
         audio_url=audio_url,
         waveform_data=waveform_data,
     )

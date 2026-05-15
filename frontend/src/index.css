@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --bd-bg: #f7f4ed;
-  --bd-bg-soft: #efeadf;
-  --bd-card: #ffffff;
-  --bd-ink: #1f261a;
-  --bd-ink-soft: #5a6451;
-  --bd-ink-mute: rgba(31, 38, 26, 0.55);
-  --bd-moss: #5a6e4a;
-  --bd-moss-deep: #3d4a32;
-  --bd-terra: #c46742;
-  --bd-rule: rgba(31, 38, 26, 0.10);
-  --bd-rule-soft: rgba(31, 38, 26, 0.06);
+  /* Nordic Wild + Lime */
+  --bd-bg: #f0f2f0;
+  --bd-bg-soft: #e4e8e4;
+  --bd-card: #eaeee9;
+  --bd-ink: #1a2024;
+  --bd-ink-soft: #3d4a4e;
+  --bd-ink-mute: rgba(26, 32, 36, 0.50);
+  --bd-moss: #2c6e5a;
+  --bd-moss-deep: #1a4035;
+  --bd-terra: #8bba2e;          /* lime replaces terracotta */
+  --bd-lime: #8bba2e;           /* alias for semantic clarity */
+  --bd-fjord: #5b7fa6;          /* water / map blue */
+  --bd-rule: rgba(26, 32, 36, 0.10);
+  --bd-rule-soft: rgba(26, 32, 36, 0.06);
   --bd-sans: "Inter", "Helvetica Neue", system-ui, sans-serif;
 }
 
@@ -22,4 +25,22 @@
 body {
   background-color: var(--bd-bg);
   color: var(--bd-ink);
+}
+
+.auth-input:focus {
+  border-color: var(--bd-moss) !important;
+  box-shadow: 0 0 0 3px rgba(44, 110, 90, 0.14);
+}
+
+/* ── Pine tree loading animation ──────────────────── */
+.pine-grow   { animation: pineGrow 2.4s ease-in-out infinite; }
+.pine-grow-2 { animation: pineGrow 2.4s ease-in-out 0.38s infinite; }
+.pine-grow-3 { animation: pineGrow 2.4s ease-in-out 0.76s infinite; }
+
+@keyframes pineGrow {
+  0%,  4%  { transform: scaleY(0);    opacity: 0; }
+  16%      { opacity: 1; }
+  48%, 78% { transform: scaleY(1);    opacity: 1; }
+  90%      { opacity: 0.4; }
+  98%,100% { transform: scaleY(0.02); opacity: 0; }
 }

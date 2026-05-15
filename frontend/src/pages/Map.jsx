@@ -170,10 +170,13 @@ export default function Map() {
   useEffect(() => {
     if (map.current) return
 
+    const initLat = user?.location_lat ?? BERLIN_DEFAULT.lat
+    const initLng = user?.location_lng ?? BERLIN_DEFAULT.lng
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [BERLIN_DEFAULT.lng, BERLIN_DEFAULT.lat],
+      center: [initLng, initLat],
       zoom: 13,
     })
 
@@ -195,6 +198,13 @@ export default function Map() {
         }
       })
 
+      const storedLat = user?.location_lat
+      const storedLng = user?.location_lng
+
+      if (storedLat && storedLng) {
+        loadPins(storedLat, storedLng)
+      }
+
       navigator.geolocation?.getCurrentPosition(
         ({ coords }) => {
           const { latitude: lat, longitude: lng } = coords
@@ -203,7 +213,9 @@ export default function Map() {
           loadPins(lat, lng)
         },
         () => {
-          loadPins(BERLIN_DEFAULT.lat, BERLIN_DEFAULT.lng)
+          if (!storedLat) {
+            loadPins(BERLIN_DEFAULT.lat, BERLIN_DEFAULT.lng)
+          }
         }
       )
     })
@@ -347,9 +359,11 @@ export default function Map() {
       sightings
         .filter((sighting) => sighting.lat != null && sighting.lng != null)
         .forEach((sighting) => {
-          const marker = new mapboxgl.Marker(markerElement('var(--bd-terra)', 'Personal sighting'))
+          const name = sighting.common_name || 'Sighting'
+          const subtitle = sighting.place_name || new Date(sighting.identified_at).toLocaleDateString()
+          const marker = new mapboxgl.Marker(markerElement('var(--bd-terra)', name))
             .setLngLat([sighting.lng, sighting.lat])
-            .setPopup(new mapboxgl.Popup({ offset: 12 }).setText('Personal sighting'))
+            .setPopup(new mapboxgl.Popup({ offset: 12 }).setText(`${name} · ${subtitle}`))
             .addTo(map.current)
           markersRef.current.push(marker)
         })

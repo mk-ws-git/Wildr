@@ -4,6 +4,8 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
 import useAuthStore from '../store/authStore'
+import WeatherIcon from '../components/WeatherIcon'
+import PineTrees from '../components/PineTrees'
 import {
   fetchNearbyGreenspaces,
   fetchNearbyWaterBodies,
@@ -202,6 +204,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [mapLoading, setMapLoading] = useState(true)
   const [weather, setWeather] = useState(null)
+  const [heroPhoto, setHeroPhoto] = useState(null)
   const [showCommunitySightings, setShowCommunitySightings] = useState(true)
   const [showPersonalSightings, setShowPersonalSightings] = useState(true)
   const [showSavedPlaces, setShowSavedPlaces] = useState(true)
@@ -487,21 +490,49 @@ export default function Home() {
       })
 
       mapRef.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
+
+      const fetchWeather = (lat, lng) => {
+        fetch(`/api/weather?lat=${lat}&lng=${lng}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        })
+          .then(r => r.json())
+          .then(d => { if (!d.error) setWeather(d) })
+          .catch(() => {})
+      }
+
+      const fetchHeroPhoto = (lat, lng) => {
+        fetch(`/api/photos/daily?lat=${lat}&lng=${lng}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        })
+          .then(r => r.json())
+          .then(d => { if (d.photo_url) setHeroPhoto(d) })
+          .catch(() => {})
+      }
+
+      const storedLat = user?.location_lat
+      const storedLng = user?.location_lng
+
+      if (storedLat && storedLng) {
+        mapRef.current.flyTo({ center: [storedLng, storedLat], zoom: 11 })
+        loadPins(storedLat, storedLng)
+        fetchWeather(storedLat, storedLng)
+        fetchHeroPhoto(storedLat, storedLng)
+        setMapLoading(false)
+      }
+
       navigator.geolocation?.getCurrentPosition(
         ({ coords }) => {
           mapRef.current.flyTo({ center: [coords.longitude, coords.latitude], zoom: 11 })
           loadPins(coords.latitude, coords.longitude)
+          fetchWeather(coords.latitude, coords.longitude)
+          fetchHeroPhoto(coords.latitude, coords.longitude)
           setMapLoading(false)
-          fetch(`/api/weather?lat=${coords.latitude}&lng=${coords.longitude}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          })
-            .then(r => r.json())
-            .then(d => { if (!d.error) setWeather(d) })
-            .catch(() => {})
         },
         () => {
-          loadPins(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng)
-          setMapLoading(false)
+          if (!storedLat) {
+            loadPins(DEFAULT_CENTER.lat, DEFAULT_CENTER.lng)
+            setMapLoading(false)
+          }
         }
       )
     })
@@ -543,9 +574,7 @@ export default function Home() {
       sightings
         .filter((sighting) => sighting.lat != null && sighting.lng != null)
         .forEach((sighting) => {
-          const title = sighting.species?.common_name
-            ? sighting.species.common_name
-            : `Sighting #${sighting.id}`
+          const title = sighting.common_name || `Sighting #${sighting.id}`
           const subtitle = sighting.identified_at
             ? new Date(sighting.identified_at).toLocaleDateString()
             : 'Personal sighting'
@@ -579,33 +608,159 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6" style={{ backgroundColor: 'var(--bd-bg)', color: 'var(--bd-ink)' }}>
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm font-semibold" style={{ color: 'var(--bd-moss)' }}>{greeting()}</p>
-          <h1 className="text-3xl font-semibold" style={{ color: 'var(--bd-ink)' }}>{user?.username || 'Wildr user'}</h1>
-          <p className="mt-2 text-sm" style={{ color: 'var(--bd-ink-soft)', maxWidth: '320px' }}>
-            {weather
-              ? `${Math.round(weather.temp_c)}°C · ${weather.description} · ${weather.wind_kph} km/h wind`
-              : 'Fetching weather…'}
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Link
-            to="/identify"
-            className="w-16 h-16 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition"
-            style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}
-            title="Identify by photo"
-          >
-            <IconCameraSmall />
-          </Link>
-          <Link
-            to="/identify-audio"
-            className="w-16 h-16 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition"
-            style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}
-            title="Identify by audio"
-          >
-            <IconMicSmall />
-          </Link>
+
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <div
+        className="relative rounded-3xl overflow-hidden"
+        style={{ minHeight: '420px', maxHeight: '520px', height: '52vw' }}
+      >
+        {/* Background photo */}
+        {heroPhoto?.photo_url ? (
+          <img
+            src={heroPhoto.photo_url}
+            alt={heroPhoto.description || 'Daily nature photo'}
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: 'center' }}
+          />
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(135deg, var(--bd-moss-deep) 0%, var(--bd-moss) 100%)' }}
+          />
+        )}
+
+        {/* Gradient overlay */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.08) 48%, rgba(0,0,0,0.52) 100%)',
+          }}
+        />
+
+        {/* Content */}
+        <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-8">
+          {/* Top row: greeting + weather + action buttons */}
+          <div className="flex items-start justify-between gap-4">
+            {/* Left: greeting + weather */}
+            <div>
+              <p
+                className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: 'rgba(255,255,255,0.72)', letterSpacing: '0.12em' }}
+              >
+                {greeting()}
+              </p>
+              <h1 className="text-3xl md:text-4xl font-bold text-white mt-0.5 leading-tight">
+                {user?.username || 'Wildr'}
+              </h1>
+
+              {/* Weather widget */}
+              {weather ? (
+                <div className="mt-4 flex items-center gap-3">
+                  <WeatherIcon code={weather.icon_code} size={44} />
+                  <div>
+                    <div
+                      className="text-5xl font-light text-white leading-none"
+                      style={{ letterSpacing: '-0.02em' }}
+                    >
+                      {Math.round(weather.temp_c)}°
+                    </div>
+                    <div
+                      className="text-sm capitalize mt-1"
+                      style={{ color: 'rgba(255,255,255,0.80)' }}
+                    >
+                      {weather.description}
+                    </div>
+                    <div
+                      className="text-xs mt-0.5"
+                      style={{ color: 'rgba(255,255,255,0.55)' }}
+                    >
+                      Feels {Math.round(weather.feels_like_c)}° · Wind {weather.wind_kph} km/h
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  <div className="w-6 h-6 rounded-full border-2 border-current opacity-40 animate-pulse" />
+                  <span className="text-sm">Loading weather…</span>
+                </div>
+              )}
+            </div>
+
+            {/* Right: action buttons */}
+            <div className="flex gap-2 shrink-0 mt-1">
+              <Link
+                to="/identify"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition hover:scale-105"
+                style={{
+                  background: 'rgba(255,255,255,0.18)',
+                  border: '1px solid rgba(255,255,255,0.30)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }}
+                title="Identify by photo"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                  <circle cx="12" cy="13" r="3"/>
+                </svg>
+              </Link>
+              <Link
+                to="/identify-audio"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition hover:scale-105"
+                style={{
+                  background: 'rgba(255,255,255,0.18)',
+                  border: '1px solid rgba(255,255,255,0.30)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }}
+                title="Identify by sound"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10a7 7 0 0 1-14 0"/>
+                  <path d="M12 19v4"/>
+                  <path d="M8 23h8"/>
+                </svg>
+              </Link>
+            </div>
+          </div>
+
+          {/* Bottom: photo attribution */}
+          {heroPhoto && (
+            <div className="flex items-end justify-between gap-4">
+              <p
+                className="text-xs leading-relaxed"
+                style={{ color: 'rgba(255,255,255,0.55)', maxWidth: '320px' }}
+              >
+                {heroPhoto.description && (
+                  <span className="italic">{heroPhoto.description}</span>
+                )}
+                {heroPhoto.photographer && (
+                  <span>
+                    {heroPhoto.description ? ' · ' : ''}Photo by{' '}
+                    <a
+                      href={heroPhoto.photographer_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2 hover:text-white transition"
+                    >
+                      {heroPhoto.photographer}
+                    </a>{' '}
+                    on{' '}
+                    <a
+                      href="https://unsplash.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2 hover:text-white transition"
+                    >
+                      Unsplash
+                    </a>
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -732,16 +887,23 @@ export default function Home() {
                   <div key={idx} className="h-16 rounded-2xl" style={{ backgroundColor: 'var(--bd-bg-soft)' }} />
                 ))
               ) : sightings.length === 0 ? (
-                <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>No recent sightings. Head out and identify some species!</p>
+                <div className="flex flex-col items-center py-6 gap-3">
+                  <PineTrees size="sm" />
+                  <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>Head out and identify some species!</p>
+                </div>
               ) : (
                 sightings.slice(0, 3).map((sighting) => (
-                  <div key={sighting.id} className="rounded-2xl p-4 flex items-center gap-4" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}>
-                    <div className="w-14 h-14 rounded-xl" style={{ backgroundColor: 'var(--bd-bg-soft)' }}></div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-sm" style={{ color: 'var(--bd-ink)' }}>Sighting #{sighting.id}</div>
-                      <div className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>{formatDate(sighting.identified_at)}</div>
+                  <div key={sighting.id} className="rounded-2xl flex items-center gap-0 overflow-hidden" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}>
+                    <div className="w-14 h-14 flex-shrink-0" style={{ backgroundColor: 'var(--bd-bg-soft)' }}>
+                      {sighting.photo_url
+                        ? <img src={sighting.photo_url} alt={sighting.common_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : null}
                     </div>
-                    <div className="text-sm font-semibold" style={{ color: 'var(--bd-moss)' }}>0.3 mi</div>
+                    <div className="flex-1 px-3 py-2">
+                      <div className="font-semibold text-sm" style={{ color: 'var(--bd-ink)' }}>{sighting.common_name || `Sighting #${sighting.id}`}</div>
+                      <div className="text-xs italic" style={{ color: 'var(--bd-ink-mute)' }}>{sighting.scientific_name}</div>
+                      <div className="text-xs" style={{ color: 'var(--bd-ink-soft)' }}>{formatDate(sighting.identified_at)}{sighting.place_name ? ` · ${sighting.place_name}` : ''}</div>
+                    </div>
                   </div>
                 ))
               )}

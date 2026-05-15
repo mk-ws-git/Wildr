@@ -1,14 +1,16 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import NavBar from './components/NavBar'
 import ProtectedRoute from './components/ProtectedRoute'
+import PineTrees from './components/PineTrees'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import Splash from './pages/Splash'
 import Home from './pages/Home'
 import Identify from './pages/Identify'
-import IdentifyAudio from './pages/IdentifyAudio'
+import LogSighting from './pages/LogSighting'
 import Species from './pages/Species'
 import SpeciesDetail from './pages/SpeciesDetail'
 import Walks from './pages/Walks'
@@ -18,32 +20,52 @@ import Profile from './pages/Profile'
 import Map from './pages/Map'
 import Badges from './pages/Badges'
 import Sightings from './pages/Sightings'
+import Friends from './pages/Friends'
+import Onboarding from './pages/Onboarding'
 import api from './api/client'
 import useAuthStore from './store/authStore'
 import { ToastProvider } from './components/Toast'
 
 export default function App() {
   const { token, setUser } = useAuthStore()
+  const [initializing, setInitializing] = useState(!!token)
 
   useEffect(() => {
     if (token) {
-      api.get('/users/me').then(({ data }) => setUser(data)).catch(() => {})
+      setInitializing(true)
+      api.get('/users/me')
+        .then(({ data }) => setUser(data))
+        .catch(() => {})
+        .finally(() => setInitializing(false))
+    } else {
+      setInitializing(false)
     }
   }, [token, setUser])
+
+  if (initializing) {
+    return <PineTrees fullPage size="lg" label="Loading Wildr…" />
+  }
 
   return (
     <ToastProvider>
       <NavBar />
       <Routes>
+        {/* Public */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+
+        {/* Splash for unauthenticated, Home for authenticated */}
+        <Route path="/" element={token ? <ProtectedRoute><Home /></ProtectedRoute> : <Splash />} />
+
+        {/* Protected */}
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/identify" element={<ProtectedRoute><Identify /></ProtectedRoute>} />
+        <Route path="/identify/audio" element={<ProtectedRoute><Identify /></ProtectedRoute>} />
+        <Route path="/log-sighting" element={<ProtectedRoute><LogSighting /></ProtectedRoute>} />
         <Route path="/species" element={<ProtectedRoute><Species /></ProtectedRoute>} />
         <Route path="/species/:id" element={<ProtectedRoute><SpeciesDetail /></ProtectedRoute>} />
-        <Route path="/identify/audio" element={<ProtectedRoute><IdentifyAudio /></ProtectedRoute>} />
         <Route path="/walks" element={<ProtectedRoute><Walks /></ProtectedRoute>} />
         <Route path="/walks/:id" element={<ProtectedRoute><WalkDetail /></ProtectedRoute>} />
         <Route path="/locations/:id" element={<ProtectedRoute><LocationDetail /></ProtectedRoute>} />
@@ -51,6 +73,7 @@ export default function App() {
         <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
         <Route path="/badges" element={<ProtectedRoute><Badges /></ProtectedRoute>} />
         <Route path="/sightings" element={<ProtectedRoute><Sightings /></ProtectedRoute>} />
+        <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
       </Routes>
     </ToastProvider>
   )

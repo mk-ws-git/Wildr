@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     USE_BIRDNET: bool = False
 
     INAT_API_TOKEN: str = ""
+    UNSPLASH_ACCESS_KEY: str = ""
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM_DOMAIN: str = "wildr.app"
+    FRONTEND_URL: str = "http://localhost:5173"
     ANTHROPIC_API_KEY: str = ""
     MAPBOX_TOKEN: str = ""
     R2_ACCOUNT_ID: str = ""
