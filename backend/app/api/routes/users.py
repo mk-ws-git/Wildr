@@ -3,7 +3,10 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.user import User
+from app.models.user_species import UserSpecies
+from app.models.species import Species
 from app.schemas.user import UserPasswordChange, UserResponse, UserUpdate
+from app.schemas.species import SpeciesResponse, UserSpeciesResponse
 from app.core.deps import get_current_user
 from app.core.security import hash_password, verify_password
 from app.database import get_db
@@ -76,6 +79,64 @@ async def change_password(
     current_user.hashed_password = hash_password(body.new_password)
     db.add(current_user)
     await db.commit()
+
+
+@router.get("/me/species", response_model=list[UserSpeciesResponse])
+async def my_life_list(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (await db.execute(
+        select(UserSpecies, Species)
+        .join(Species, Species.id == UserSpecies.species_id)
+        .where(UserSpecies.user_id == current_user.id, UserSpecies.added_to_list == True)
+        .order_by(UserSpecies.first_seen_at.desc())
+    )).all()
+    return [
+        UserSpeciesResponse(
+            **SpeciesResponse.model_validate(species).model_dump(),
+            first_seen_at=us.first_seen_at,
+            added_to_list=us.added_to_list,
+        )
+        for us, species in rows
+    ]
+
+
+@router.post("/me/species/{species_id}", response_model=UserSpeciesResponse, status_code=status.HTTP_201_CREATED)
+async def add_to_life_list(
+    species_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    species = (await db.execute(select(Species).where(Species.id == species_id))).scalar_one_or_none()
+    if not species:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Species not found")
+    existing = (await db.execute(
+        select(UserSpecies).where(
+            UserSpecies.user_id == current_user.id,
+            UserSpecies.species_id == species_id,
+        )
+    )).scalar_one_or_none()
+    if existing:
+        if not existing.added_to_list:
+            existing.added_to_list = True
+            db.add(existing)
+            await db.commit()
+            await db.refresh(existing)
+        return UserSpeciesResponse(
+            **SpeciesResponse.model_validate(species).model_dump(),
+            first_seen_at=existing.first_seen_at,
+            added_to_list=existing.added_to_list,
+        )
+    us = UserSpecies(user_id=current_user.id, species_id=species_id, added_to_list=True)
+    db.add(us)
+    await db.commit()
+    await db.refresh(us)
+    return UserSpeciesResponse(
+        **SpeciesResponse.model_validate(species).model_dump(),
+        first_seen_at=us.first_seen_at,
+        added_to_list=us.added_to_list,
+    )
 
 
 @router.get("/{user_id}", response_model=UserResponse)

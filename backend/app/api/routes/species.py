@@ -5,7 +5,7 @@ from app.models.species import Species
 from app.models.species_save import SpeciesSave
 from app.models.user_species import UserSpecies
 from app.models.sighting import Sighting
-from app.schemas.species import SpeciesResponse, SpeciesListItem
+from app.schemas.species import SpeciesResponse, SpeciesListItem, UserSpeciesResponse
 from app.schemas.sighting import SightingResponse
 from app.core.deps import get_current_user
 from app.models.user import User
@@ -49,6 +49,30 @@ async def list_species(
         SpeciesListItem(
             **SpeciesResponse.model_validate(s).model_dump(),
             saved=s.id in saved_ids,
+            seen=s.id in seen_ids,
+        )
+        for s in rows
+    ]
+
+
+@router.get("/saved", response_model=list[SpeciesListItem])
+async def saved_species(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    rows = (await db.execute(
+        select(Species)
+        .join(SpeciesSave, SpeciesSave.species_id == Species.id)
+        .where(SpeciesSave.user_id == current_user.id)
+        .order_by(Species.common_name)
+    )).scalars().all()
+    seen_ids = set((await db.execute(
+        select(UserSpecies.species_id).where(UserSpecies.user_id == current_user.id)
+    )).scalars().all())
+    return [
+        SpeciesListItem(
+            **SpeciesResponse.model_validate(s).model_dump(),
+            saved=True,
             seen=s.id in seen_ids,
         )
         for s in rows

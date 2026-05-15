@@ -5,10 +5,12 @@ from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.models.location import Location
 from app.models.location_save import LocationSave
+from app.models.location_review import LocationReview
 from app.models.user_location import UserLocation
 from app.models.sighting import Sighting
 from app.schemas.location import LocationCreate, LocationUpdate, LocationResponse
 from app.schemas.sighting import SightingResponse
+from app.schemas.review import ReviewCreate, ReviewUpdate, LocationReviewResponse
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.database import get_db
@@ -189,3 +191,68 @@ async def update_location(
     await db.commit()
     await db.refresh(location)
     return location
+
+
+@router.get("/{location_id}/reviews", response_model=list[LocationReviewResponse])
+async def list_location_reviews(
+    location_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    rows = (await db.execute(
+        select(LocationReview)
+        .where(LocationReview.location_id == location_id)
+        .order_by(LocationReview.created_at.desc())
+    )).scalars().all()
+    return rows
+
+
+@router.post("/{location_id}/reviews", response_model=LocationReviewResponse, status_code=status.HTTP_201_CREATED)
+async def create_location_review(
+    location_id: int,
+    body: ReviewCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    location = (await db.execute(select(Location).where(Location.id == location_id))).scalar_one_or_none()
+    if not location:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Location not found")
+    existing = (await db.execute(
+        select(LocationReview).where(
+            LocationReview.user_id == current_user.id,
+            LocationReview.location_id == location_id,
+        )
+    )).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="You have already reviewed this location")
+    review = LocationReview(user_id=current_user.id, location_id=location_id, **body.model_dump())
+    db.add(review)
+    await db.commit()
+    await db.refresh(review)
+    return review
+
+
+@router.patch("/{location_id}/reviews/{review_id}", response_model=LocationReviewResponse)
+async def update_location_review(
+    location_id: int,
+    review_id: int,
+    body: ReviewUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    review = (await db.execute(
+        select(LocationReview).where(
+            LocationReview.id == review_id,
+            LocationReview.location_id == location_id,
+        )
+    )).scalar_one_or_none()
+    if not review:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
+    if review.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your review")
+    for field, value in body.model_dump(exclude_unset=True).items():
+        setattr(review, field, value)
+    db.add(review)
+    await db.commit()
+    await db.refresh(review)
+    return review

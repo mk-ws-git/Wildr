@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 
 class SpeciesResponse(BaseModel):
@@ -21,3 +22,8 @@ class SpeciesResponse(BaseModel):
 class SpeciesListItem(SpeciesResponse):
     saved: bool = False
     seen: bool = False
+
+
+class UserSpeciesResponse(SpeciesResponse):
+    first_seen_at: datetime
+    added_to_list: bool = False

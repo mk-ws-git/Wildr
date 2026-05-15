@@ -21,6 +21,12 @@ class WalkResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class WalkStopCreate(BaseModel):
+    location_id: int
+    stop_order: int
+    description: str | None = None
+
+
 class WalkStopResponse(BaseModel):
     id: int
     walk_id: int
@@ -28,5 +34,22 @@ class WalkStopResponse(BaseModel):
     stop_order: int
     description: str | None
     audio_url: str | None
+
+    model_config = {"from_attributes": True}
+
+
+class WalkCompletionResponse(BaseModel):
+    id: int
+    user_id: int
+    walk_id: int
+    completed_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class WalkSightingResponse(BaseModel):
+    id: int
+    walk_id: int
+    sighting_id: int
 
     model_config = {"from_attributes": True}
