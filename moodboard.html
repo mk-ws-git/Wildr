@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wildr — Colour Moodboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Georgia', serif; background: #0e0e0e; color: #f0f0f0; padding: 3rem 2rem; }
+  h1 { font-size: 2rem; letter-spacing: -0.04em; font-style: italic; margin-bottom: 0.25rem; }
+  .subtitle { font-family: 'Helvetica Neue', sans-serif; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: #666; margin-bottom: 3.5rem; }
+
+  section { margin-bottom: 4rem; }
+  h2 { font-family: 'Helvetica Neue', sans-serif; font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: #555; margin-bottom: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #222; }
+
+  /* Palette grids */
+  .palette { display: flex; gap: 0; border-radius: 1rem; overflow: hidden; height: 80px; margin-bottom: 1rem; }
+  .swatch { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px 10px; }
+  .swatch span { font-family: 'Helvetica Neue', sans-serif; font-size: 0.62rem; letter-spacing: 0.04em; line-height: 1.5; opacity: 0.85; }
+  .swatch .hex { font-weight: 700; }
+  .swatch .name { opacity: 0.6; }
+
+  /* Proposal cards */
+  .proposals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+  .proposal { border-radius: 1.25rem; overflow: hidden; background: #161616; border: 1px solid #222; }
+  .proposal-header { padding: 1.5rem 1.5rem 1rem; border-bottom: 1px solid #222; }
+  .proposal-name { font-size: 1.1rem; font-style: italic; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
+  .proposal-tagline { font-family: 'Helvetica Neue', sans-serif; font-size: 0.72rem; color: #666; letter-spacing: 0.05em; }
+  .proposal-palette { display: flex; height: 56px; }
+  .proposal-swatch { flex: 1; }
+  .proposal-body { padding: 1.25rem 1.5rem 1.5rem; }
+  .proposal-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; align-items: center; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .label { font-family: 'Helvetica Neue', sans-serif; font-size: 0.72rem; color: #888; flex: 1; }
+  .hex-tag { font-family: 'Helvetica Neue', sans-serif; font-size: 0.68rem; color: #555; letter-spacing: 0.04em; }
+
+  /* Mock UI */
+  .mock { border-radius: 0.75rem; overflow: hidden; margin-top: 1.25rem; }
+  .mock-bar { height: 32px; display: flex; align-items: center; padding: 0 12px; gap: 10px; }
+  .mock-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .mock-wordmark { font-style: italic; font-size: 0.75rem; }
+  .mock-links { display: flex; gap: 12px; margin-left: auto; }
+  .mock-link { font-family: 'Helvetica Neue', sans-serif; font-size: 0.58rem; opacity: 0.5; letter-spacing: 0.04em; }
+  .mock-link.active { opacity: 1; font-weight: 600; }
+  .mock-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .mock-card { border-radius: 0.5rem; padding: 10px 12px; display: flex; gap: 10px; align-items: center; }
+  .mock-thumb { width: 36px; height: 36px; border-radius: 0.4rem; flex-shrink: 0; opacity: 0.7; }
+  .mock-text { display: flex; flex-direction: column; gap: 3px; }
+  .mock-title { font-family: 'Helvetica Neue', sans-serif; font-size: 0.6rem; font-weight: 600; }
+  .mock-sub { font-family: 'Helvetica Neue', sans-serif; font-size: 0.55rem; opacity: 0.5; }
+  .mock-badge { font-family: 'Helvetica Neue', sans-serif; font-size: 0.55rem; border-radius: 999px; padding: 2px 7px; margin-left: auto; }
+
+  /* Mood words */
+  .mood-words { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #1e1e1e; }
+  .mood-word { font-family: 'Helvetica Neue', sans-serif; font-size: 0.65rem; letter-spacing: 0.08em; padding: 3px 9px; border-radius: 999px; border: 1px solid #333; color: #666; text-transform: uppercase; }
+
+  .vs-label { font-family: 'Helvetica Neue', sans-serif; font-size: 0.65rem; color: #444; text-align: center; margin: 0.75rem 0 0.25rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* Current section */
+  .current-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .current-col h3 { font-family: 'Helvetica Neue', sans-serif; font-size: 0.65rem; color: #444; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem; }
+  .issue-list { display: flex; flex-direction: column; gap: 0.4rem; }
+  .issue { font-family: 'Helvetica Neue', sans-serif; font-size: 0.72rem; color: #888; padding: 0.4rem 0.6rem; border-radius: 0.4rem; background: #1a1a1a; border-left: 2px solid #c46742; }
+  .issue.ok { border-left-color: #2d6a4f; color: #aaa; }
+</style>
+</head>
+<body>
+
+<h1>Wildr</h1>
+<div class="subtitle">Colour &amp; Identity Moodboard — May 2026</div>
+
+<!-- ─── CURRENT ─────────────────────────────────────────── -->
+<section>
+  <h2>Current palette</h2>
+
+  <div class="palette">
+    <div class="swatch" style="background:#f5f5f5;">
+      <span class="hex" style="color:#18181b;">f5f5f5</span>
+      <span class="name" style="color:#18181b;">bg</span>
+    </div>
+    <div class="swatch" style="background:#ffffff;">
+      <span class="hex" style="color:#18181b;">ffffff</span>
+      <span class="name" style="color:#18181b;">card</span>
+    </div>
+    <div class="swatch" style="background:#18181b;">
+      <span class="hex" style="color:#f5f5f5;">18181b</span>
+      <span class="name" style="color:#aaa;">ink</span>
+    </div>
+    <div class="swatch" style="background:#2d6a4f;">
+      <span class="hex" style="color:#fff;">2d6a4f</span>
+      <span class="name" style="color:#cde;">moss</span>
+    </div>
+    <div class="swatch" style="background:#1b4332;">
+      <span class="hex" style="color:#fff;">1b4332</span>
+      <span class="name" style="color:#bcd;">moss deep</span>
+    </div>
+    <div class="swatch" style="background:#c46742;">
+      <span class="hex" style="color:#fff;">c46742</span>
+      <span class="name" style="color:#fde;">terra</span>
+    </div>
+  </div>
+
+  <div class="current-grid">
+    <div class="current-col">
+      <h3>What's working</h3>
+      <div class="issue-list">
+        <div class="issue ok">Moss green reads clearly as nature/eco</div>
+        <div class="issue ok">Terra accent creates warm contrast</div>
+        <div class="issue ok">Near-black ink is legible and neutral</div>
+      </div>
+    </div>
+    <div class="current-col">
+      <h3>What needs work</h3>
+      <div class="issue-list">
+        <div class="issue">Background #f5f5f5 feels generic — no character</div>
+        <div class="issue">White cards on light grey look flat, no depth</div>
+        <div class="issue">Terra accent (#c46742) is muddy, not vibrant enough</div>
+        <div class="issue">No warm tone in backgrounds — sterile feel</div>
+        <div class="issue">Two greens too similar, hard to create hierarchy</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PROPOSALS ─────────────────────────────────────────── -->
+<section>
+  <h2>Three proposals</h2>
+
+  <div class="proposals">
+
+    <!-- A: FIELD NOTES -->
+    <div class="proposal">
+      <div class="proposal-header">
+        <div class="proposal-name">A — Field Notes</div>
+        <div class="proposal-tagline">Warm paper · naturalist journal · aged linen</div>
+      </div>
+      <div class="proposal-palette">
+        <div class="proposal-swatch" style="background:#f7f3ed;"></div>
+        <div class="proposal-swatch" style="background:#ede7dd;"></div>
+        <div class="proposal-swatch" style="background:#1c1a17;"></div>
+        <div class="proposal-swatch" style="background:#3a6b3e;"></div>
+        <div class="proposal-swatch" style="background:#c95f2f;"></div>
+        <div class="proposal-swatch" style="background:#7b9e6b;"></div>
+      </div>
+      <div class="proposal-body">
+        <div class="proposal-row"><div class="dot" style="background:#f7f3ed;border:1px solid #333;"></div><span class="label">Background</span><span class="hex-tag">#f7f3ed</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#ede7dd;border:1px solid #333;"></div><span class="label">Card</span><span class="hex-tag">#ede7dd</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#1c1a17;"></div><span class="label">Ink</span><span class="hex-tag">#1c1a17</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#3a6b3e;"></div><span class="label">Primary (moss)</span><span class="hex-tag">#3a6b3e</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#c95f2f;"></div><span class="label">Accent (rust)</span><span class="hex-tag">#c95f2f</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#7b9e6b;"></div><span class="label">Soft (sage)</span><span class="hex-tag">#7b9e6b</span></div>
+
+        <!-- Mini mock -->
+        <div class="mock" style="background:#f7f3ed;">
+          <div class="mock-bar" style="background:#ede7dd; border-bottom:1px solid rgba(28,26,23,0.08);">
+            <div class="mock-wordmark" style="color:#1c1a17;">Wildr</div>
+            <div class="mock-links">
+              <span class="mock-link" style="color:#1c1a17;">Home</span>
+              <span class="mock-link active" style="color:#3a6b3e;border-bottom:1.5px solid #3a6b3e;">Identify</span>
+              <span class="mock-link" style="color:#1c1a17;">Map</span>
+            </div>
+          </div>
+          <div class="mock-body">
+            <div class="mock-card" style="background:#ede7dd;">
+              <div class="mock-thumb" style="background:#7b9e6b;"></div>
+              <div class="mock-text">
+                <span class="mock-title" style="color:#1c1a17;">Robin</span>
+                <span class="mock-sub" style="color:#1c1a17;">Back garden · just now</span>
+              </div>
+              <span class="mock-badge" style="background:#3a6b3e;color:#fff;">Common</span>
+            </div>
+            <div class="mock-card" style="background:#ede7dd;">
+              <div class="mock-thumb" style="background:#c95f2f; opacity:0.6;"></div>
+              <div class="mock-text">
+                <span class="mock-title" style="color:#1c1a17;">Barn Owl</span>
+                <span class="mock-sub" style="color:#1c1a17;">Regent's Park</span>
+              </div>
+              <span class="mock-badge" style="background:#c95f2f;color:#fff;">Rare</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mood-words">
+          <span class="mood-word">editorial</span>
+          <span class="mood-word">naturalist</span>
+          <span class="mood-word">warm</span>
+          <span class="mood-word">craft</span>
+          <span class="mood-word">tactile</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- B: NORDIC WILD -->
+    <div class="proposal">
+      <div class="proposal-header">
+        <div class="proposal-name">B — Nordic Wild</div>
+        <div class="proposal-tagline">Slate sky · fjord depth · Scandinavian space</div>
+      </div>
+      <div class="proposal-palette">
+        <div class="proposal-swatch" style="background:#f0f2f0;"></div>
+        <div class="proposal-swatch" style="background:#e4e8e4;"></div>
+        <div class="proposal-swatch" style="background:#1a2024;"></div>
+        <div class="proposal-swatch" style="background:#2c6e5a;"></div>
+        <div class="proposal-swatch" style="background:#e07b54;"></div>
+        <div class="proposal-swatch" style="background:#5b7fa6;"></div>
+      </div>
+      <div class="proposal-body">
+        <div class="proposal-row"><div class="dot" style="background:#f0f2f0;border:1px solid #333;"></div><span class="label">Background</span><span class="hex-tag">#f0f2f0</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#e4e8e4;border:1px solid #333;"></div><span class="label">Card</span><span class="hex-tag">#e4e8e4</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#1a2024;"></div><span class="label">Ink</span><span class="hex-tag">#1a2024</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#2c6e5a;"></div><span class="label">Primary (pine)</span><span class="hex-tag">#2c6e5a</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#e07b54;"></div><span class="label">Accent (ember)</span><span class="hex-tag">#e07b54</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#5b7fa6;"></div><span class="label">Water (fjord)</span><span class="hex-tag">#5b7fa6</span></div>
+
+        <div class="mock" style="background:#f0f2f0;">
+          <div class="mock-bar" style="background:#e4e8e4; border-bottom:1px solid rgba(26,32,36,0.08);">
+            <div class="mock-wordmark" style="color:#1a2024;">Wildr</div>
+            <div class="mock-links">
+              <span class="mock-link" style="color:#1a2024;">Home</span>
+              <span class="mock-link active" style="color:#2c6e5a;border-bottom:1.5px solid #2c6e5a;">Identify</span>
+              <span class="mock-link" style="color:#1a2024;">Map</span>
+            </div>
+          </div>
+          <div class="mock-body">
+            <div class="mock-card" style="background:#e4e8e4;">
+              <div class="mock-thumb" style="background:#2c6e5a; opacity:0.7;"></div>
+              <div class="mock-text">
+                <span class="mock-title" style="color:#1a2024;">Robin</span>
+                <span class="mock-sub" style="color:#1a2024;">Back garden · just now</span>
+              </div>
+              <span class="mock-badge" style="background:#2c6e5a;color:#fff;">Common</span>
+            </div>
+            <div class="mock-card" style="background:#e4e8e4;">
+              <div class="mock-thumb" style="background:#5b7fa6; opacity:0.6;"></div>
+              <div class="mock-text">
+                <span class="mock-title" style="color:#1a2024;">Kingfisher</span>
+                <span class="mock-sub" style="color:#1a2024;">Local canal</span>
+              </div>
+              <span class="mock-badge" style="background:#e07b54;color:#fff;">Rare</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mood-words">
+          <span class="mood-word">nordic</span>
+          <span class="mood-word">minimal</span>
+          <span class="mood-word">cool</span>
+          <span class="mood-word">precise</span>
+          <span class="mood-word">open air</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- C: GOLDEN HOUR -->
+    <div class="proposal">
+      <div class="proposal-header">
+        <div class="proposal-name">C — Golden Hour</div>
+        <div class="proposal-tagline">Dusk light · deep forest · editorial richness</div>
+      </div>
+      <div class="proposal-palette">
+        <div class="proposal-swatch" style="background:#1a1710;"></div>
+        <div class="proposal-swatch" style="background:#252218;"></div>
+        <div class="proposal-swatch" style="background:#f2e8d0;"></div>
+        <div class="proposal-swatch" style="background:#4a8c5c;"></div>
+        <div class="proposal-swatch" style="background:#d4882e;"></div>
+        <div class="proposal-swatch" style="background:#c5573e;"></div>
+      </div>
+      <div class="proposal-body">
+        <div class="proposal-row"><div class="dot" style="background:#1a1710;border:1px solid #333;"></div><span class="label">Background (forest night)</span><span class="hex-tag">#1a1710</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#252218;border:1px solid #333;"></div><span class="label">Card</span><span class="hex-tag">#252218</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#f2e8d0;"></div><span class="label">Ink (warm cream)</span><span class="hex-tag">#f2e8d0</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#4a8c5c;"></div><span class="label">Primary (canopy)</span><span class="hex-tag">#4a8c5c</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#d4882e;"></div><span class="label">Accent (golden)</span><span class="hex-tag">#d4882e</span></div>
+        <div class="proposal-row"><div class="dot" style="background:#c5573e;"></div><span class="label">Danger/Rarity</span><span class="hex-tag">#c5573e</span></div>
+
+        <div class="mock" style="background:#1a1710;">
+          <div class="mock-bar" style="background:#252218; border-bottom:1px solid rgba(242,232,208,0.08);">
+            <div class="mock-wordmark" style="color:#f2e8d0;">Wildr</div>
+            <div class="mock-links">
+              <span class="mock-link" style="color:#f2e8d0;">Home</span>
+              <span class="mock-link active" style="color:#4a8c5c;border-bottom:1.5px solid #4a8c5c;">Identify</span>
+              <span class="mock-link" style="color:#f2e8d0;">Map</span>
+            </div>
+          </div>
+          <div class="mock-body">
+            <div class="mock-card" style="background:#252218;">
+              <div class="mock-thumb" style="background:#4a8c5c; opacity:0.7;"></div>
+              <div class="mock-text">
+                <span class="mock-title" style="color:#f2e8d0;">Robin</span>
+                <span class="mock-sub" style="color:#f2e8d0;">Back garden · just now</span>
+              </div>
+              <span class="mock-badge" style="background:#4a8c5c;color:#f2e8d0;">Common</span>
+            </div>
+            <div class="mock-card" style="background:#252218;">
+              <div class="mock-thumb" style="background:#d4882e; opacity:0.6;"></div>
+              <div class="mock-text">
+                <span class="mock-title" style="color:#f2e8d0;">Tawny Owl</span>
+                <span class="mock-sub" style="color:#f2e8d0;">Forest edge</span>
+              </div>
+              <span class="mock-badge" style="background:#c5573e;color:#fff;">Rare</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mood-words">
+          <span class="mood-word">dusk</span>
+          <span class="mood-word">editorial</span>
+          <span class="mood-word">immersive</span>
+          <span class="mood-word">premium</span>
+          <span class="mood-word">cinematic</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── COMPARISON ─────────────────────────────────────────── -->
+<section>
+  <h2>At a glance — character comparison</h2>
+  <table style="width:100%;border-collapse:collapse;font-family:'Helvetica Neue',sans-serif;font-size:0.75rem;">
+    <thead>
+      <tr style="border-bottom:1px solid #333;color:#555;letter-spacing:0.08em;text-transform:uppercase;">
+        <th style="text-align:left;padding:0.5rem 0.75rem 0.75rem 0;width:20%;"></th>
+        <th style="padding:0.5rem 0.75rem 0.75rem;text-align:center;">Current</th>
+        <th style="padding:0.5rem 0.75rem 0.75rem;text-align:center;">A — Field Notes</th>
+        <th style="padding:0.5rem 0.75rem 0.75rem;text-align:center;">B — Nordic Wild</th>
+        <th style="padding:0.5rem 0.75rem 0.75rem;text-align:center;">C — Golden Hour</th>
+      </tr>
+    </thead>
+    <tbody style="color:#888;">
+      <tr style="border-bottom:1px solid #1c1c1c;">
+        <td style="padding:0.6rem 0.75rem 0.6rem 0;color:#555;text-transform:uppercase;font-size:0.65rem;letter-spacing:0.08em;">Mood</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">Neutral / clean</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">Warm / journal</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">Cool / minimal</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">Dark / cinematic</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1c1c1c;">
+        <td style="padding:0.6rem 0.75rem 0.6rem 0;color:#555;text-transform:uppercase;font-size:0.65rem;letter-spacing:0.08em;">Photography</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">⚠ Washes out</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">✓ Complements</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">✓ Pops cleanly</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">✓✓ Dramatic</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1c1c1c;">
+        <td style="padding:0.6rem 0.75rem 0.6rem 0;color:#555;text-transform:uppercase;font-size:0.65rem;letter-spacing:0.08em;">Daily hero image</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">⚠ Poor contrast</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">✓ Good</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">✓ Good</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">✓✓ Excellent</td>
+      </tr>
+      <tr style="border-bottom:1px solid #1c1c1c;">
+        <td style="padding:0.6rem 0.75rem 0.6rem 0;color:#555;text-transform:uppercase;font-size:0.65rem;letter-spacing:0.08em;">Dev cost</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">—</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">Low (few vars)</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">Low (few vars)</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">Med (dark mode)</td>
+      </tr>
+      <tr>
+        <td style="padding:0.6rem 0.75rem 0.6rem 0;color:#555;text-transform:uppercase;font-size:0.65rem;letter-spacing:0.08em;">Closest reference</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center; color:#555;">—</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">Kinfolk mag</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">Alltrails / Arc'teryx</td>
+        <td style="padding:0.6rem 0.75rem;text-align:center;">National Geographic</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ─── RECOMMENDATION ─────────────────────────────────────── -->
+<section>
+  <h2>Recommendation</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+    <div style="background:#161616;border:1px solid #222;border-radius:1rem;padding:1.5rem;">
+      <div style="font-family:'Helvetica Neue',sans-serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#555;margin-bottom:0.75rem;">If you want warm &amp; accessible</div>
+      <div style="font-size:1.1rem;font-style:italic;margin-bottom:0.5rem;">Go with A — Field Notes</div>
+      <div style="font-family:'Helvetica Neue',sans-serif;font-size:0.75rem;color:#666;line-height:1.6;">Lowest risk, warmest feel, photographs look stunning against linen. Works especially well with the editorial imagery idea. Feels like iNaturalist done right.</div>
+    </div>
+    <div style="background:#161616;border:1px solid #d4882e;border-radius:1rem;padding:1.5rem;">
+      <div style="font-family:'Helvetica Neue',sans-serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:#d4882e;margin-bottom:0.75rem;">If you want dramatic &amp; distinctive</div>
+      <div style="font-size:1.1rem;font-style:italic;margin-bottom:0.5rem;">Go with C — Golden Hour</div>
+      <div style="font-family:'Helvetica Neue',sans-serif;font-size:0.75rem;color:#666;line-height:1.6;">Most unique, most pin-board aligned. The daily hero image on a dark background will look like a magazine spread. Heavier dev change but the most memorable product.</div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
