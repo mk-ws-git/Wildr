@@ -105,7 +105,7 @@ export default function NavBar() {
 
             {dropdownOpen && (
               <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, width: 176, borderRadius: '1rem', padding: '4px 0', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', background: 'var(--bd-card)', border: '1px solid var(--bd-rule)', zIndex: 200 }}>
-                {[{ to: '/profile', label: 'Profile' }, { to: '/sightings', label: 'My Sightings' }, { to: '/badges', label: 'Badges' }].map(({ to, label }) => (
+                {[{ to: '/profile', label: 'Profile' }, { to: '/sightings', label: 'My Sightings' }, { to: '/friends', label: 'Friends' }, { to: '/badges', label: 'Badges' }].map(({ to, label }) => (
                   <Link key={to} to={to} onClick={() => setDropdownOpen(false)} style={{ display: 'block', padding: '8px 16px', fontSize: '0.875rem', color: 'var(--bd-ink)', textDecoration: 'none' }}
                     onMouseEnter={e => e.currentTarget.style.opacity = '0.7'}
                     onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -150,7 +150,7 @@ export default function NavBar() {
           {user && (
             <>
               <div style={{ borderTop: '1px solid var(--bd-rule)', margin: '0.5rem 0 0.25rem' }} />
-              {[{ to: '/profile', label: 'Profile' }, { to: '/sightings', label: 'My Sightings' }, { to: '/badges', label: 'Badges' }].map(({ to, label }) => (
+              {[{ to: '/profile', label: 'Profile' }, { to: '/sightings', label: 'My Sightings' }, { to: '/friends', label: 'Friends' }, { to: '/badges', label: 'Badges' }].map(({ to, label }) => (
                 <Link key={to} to={to} style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', textDecoration: 'none', padding: '0.625rem 0', display: 'block' }}>{label}</Link>
               ))}
               <button onClick={handleLogout} style={{ background: 'none', border: 'none', textAlign: 'left', fontSize: '0.875rem', color: 'var(--bd-ink-mute)', padding: '0.625rem 0', cursor: 'pointer' }}>

@@ -78,3 +78,33 @@ async def my_friends(
         )
     )
     return result.scalars().all()
+
+
+@router.get("/pending", response_model=list[FriendshipResponse])
+async def pending_requests(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Friendship).where(
+            Friendship.addressee_id == current_user.id,
+            Friendship.status == "pending",
+        )
+    )
+    return result.scalars().all()
+
+
+@router.delete("/{friendship_id}", status_code=204)
+async def remove_friend(
+    friendship_id: int,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Friendship).where(Friendship.id == friendship_id))
+    friendship = result.scalar_one_or_none()
+    if not friendship:
+        raise HTTPException(404, "Not found")
+    if current_user.id not in (friendship.requester_id, friendship.addressee_id):
+        raise HTTPException(403, "Not authorised")
+    await db.delete(friendship)
+    await db.commit()

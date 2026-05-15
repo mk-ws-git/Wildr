@@ -18,6 +18,7 @@ import Profile from './pages/Profile'
 import Map from './pages/Map'
 import Badges from './pages/Badges'
 import Sightings from './pages/Sightings'
+import Friends from './pages/Friends'
 import api from './api/client'
 import useAuthStore from './store/authStore'
 import { ToastProvider } from './components/Toast'
@@ -51,6 +52,7 @@ export default function App() {
         <Route path="/map" element={<ProtectedRoute><Map /></ProtectedRoute>} />
         <Route path="/badges" element={<ProtectedRoute><Badges /></ProtectedRoute>} />
         <Route path="/sightings" element={<ProtectedRoute><Sightings /></ProtectedRoute>} />
+        <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
       </Routes>
     </ToastProvider>
   )
