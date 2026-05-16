@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../api/client'
+import FlagButton from '../components/FlagButton'
 
 const RARITY_CLS = {
   common: 'bg-gray-100 text-gray-600',
@@ -348,6 +349,10 @@ export default function SpeciesDetail() {
           </div>
         </div>
       )}
+
+      <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '0.5rem' }}>
+        <FlagButton contentType="species" contentId={Number(id)} />
+      </div>
     </div>
   )
 }

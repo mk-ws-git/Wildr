@@ -21,5 +21,6 @@ class GreenspaceSummary(BaseModel):
     area_sqm: float | None
     summary: str | None
     summary_source: str | None  # "wikipedia" or "claude"
+    images: list[str] = []      # up to 6 Wikipedia/Wikimedia image URLs
     recent_sightings: list[dict]
     species_count: int

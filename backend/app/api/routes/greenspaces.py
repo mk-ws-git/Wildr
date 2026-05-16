@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text, func
@@ -8,6 +9,7 @@ from app.models.sighting import Sighting
 from app.models.species import Species
 from app.schemas.greenspace import GreenspacePin, GreenspaceSummary
 from app.utils.wikipedia import get_place_summary
+from app.utils.wiki_images import get_place_images
 
 router = APIRouter(prefix="/greenspaces", tags=["greenspaces"])
 
@@ -91,8 +93,11 @@ async def greenspace_summary(
     )
     species_count = species_result.scalar_one() or 0
 
-    # Wikipedia / Claude summary
-    summary, source = await get_place_summary(gs.name, gs.type)
+    # Wikipedia / Claude summary + images (in parallel)
+    (summary, source), images = await asyncio.gather(
+        get_place_summary(gs.name, gs.type),
+        get_place_images(gs.name, max_images=6),
+    )
 
     return GreenspaceSummary(
         id=gs.id,
@@ -101,6 +106,7 @@ async def greenspace_summary(
         area_sqm=gs.area_sqm,
         summary=summary,
         summary_source=source,
+        images=images,
         recent_sightings=recent_sightings,
         species_count=species_count,
     )

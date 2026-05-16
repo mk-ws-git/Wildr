@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes import health, auth, users, species, sightings, locations, identify, walks, badges, friendships, notifications, greenspaces, water_bodies, weather, photos, invitations, feed
+from app.api.routes import health, auth, users, species, sightings, locations, identify, walks, badges, friendships, notifications, greenspaces, water_bodies, weather, photos, invitations, feed, flags
 
 api_router = APIRouter()
 
@@ -20,3 +20,4 @@ api_router.include_router(weather.router, prefix="/weather", tags=["weather"])
 api_router.include_router(photos.router, prefix="/photos", tags=["photos"])
 api_router.include_router(invitations.router, prefix="/invitations", tags=["invitations"])
 api_router.include_router(feed.router, tags=["feed"])
+api_router.include_router(flags.router, prefix="/flags", tags=["flags"])

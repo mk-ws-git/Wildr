@@ -409,6 +409,49 @@ function PhotoTab({ coords, geoSuggestion }) {
 
 // ── Audio tab ──────────────────────────────────────────────────────────────
 
+function LiveWaveform({ analyserRef }) {
+  const canvasRef = useRef(null)
+  const rafRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas || !analyserRef.current) return
+    const ctx = canvas.getContext('2d')
+    const analyser = analyserRef.current
+    const bufLen = analyser.frequencyBinCount
+    const data = new Uint8Array(bufLen)
+
+    const draw = () => {
+      rafRef.current = requestAnimationFrame(draw)
+      analyser.getByteTimeDomainData(data)
+      const w = canvas.width
+      const h = canvas.height
+      ctx.clearRect(0, 0, w, h)
+      ctx.beginPath()
+      const step = w / bufLen
+      for (let i = 0; i < bufLen; i++) {
+        const y = (data[i] / 255) * h
+        if (i === 0) ctx.moveTo(0, y)
+        else ctx.lineTo(i * step, y)
+      }
+      ctx.strokeStyle = 'var(--bd-moss)'
+      ctx.lineWidth = 2
+      ctx.stroke()
+    }
+    draw()
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [analyserRef])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={280}
+      height={56}
+      style={{ width: '100%', height: 56, borderRadius: 12, background: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}
+    />
+  )
+}
+
 function AudioTab({ coords, geoSuggestion }) {
   const [phase, setPhase] = useState('idle')
   const [detections, setDetections] = useState([])
@@ -418,6 +461,7 @@ function AudioTab({ coords, geoSuggestion }) {
   const [saving, setSaving] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const [elapsed, setElapsed] = useState(0)
 
   useEffect(() => {
     if (geoSuggestion && !userEditedPlace && !placeName) {
@@ -429,6 +473,9 @@ function AudioTab({ coords, geoSuggestion }) {
   const chunksRef = useRef([])
   const allChunksRef = useRef([])
   const intervalRef = useRef(null)
+  const timerRef = useRef(null)
+  const audioCtxRef = useRef(null)
+  const analyserRef = useRef(null)
   const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
 
   const mergeDetections = (prev, incoming) => {
@@ -453,10 +500,20 @@ function AudioTab({ coords, geoSuggestion }) {
   }
 
   const startRecording = async () => {
-    setDetections([]); setError(null)
+    setDetections([]); setError(null); setElapsed(0)
     chunksRef.current = []; allChunksRef.current = []
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+      // Set up Web Audio API for live waveform
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+      const source = audioCtx.createMediaStreamSource(stream)
+      const analyser = audioCtx.createAnalyser()
+      analyser.fftSize = 512
+      source.connect(analyser)
+      audioCtxRef.current = audioCtx
+      analyserRef.current = analyser
+
       const recorder = new MediaRecorder(stream, { mimeType })
       mediaRecorderRef.current = recorder
       recorder.ondataavailable = (e) => {
@@ -467,6 +524,7 @@ function AudioTab({ coords, geoSuggestion }) {
       }
       recorder.start(1000)
       intervalRef.current = setInterval(analyzeChunk, 4000)
+      timerRef.current = setInterval(() => setElapsed((s) => s + 1), 1000)
       setPhase('recording')
     } catch {
       setError('Microphone access denied.')
@@ -475,6 +533,9 @@ function AudioTab({ coords, geoSuggestion }) {
 
   const stopRecording = () => {
     clearInterval(intervalRef.current)
+    clearInterval(timerRef.current)
+    audioCtxRef.current?.close()
+    analyserRef.current = null
     const recorder = mediaRecorderRef.current
     if (!recorder) return
     recorder.onstop = () => analyzeChunk()
@@ -503,8 +564,12 @@ function AudioTab({ coords, geoSuggestion }) {
   }
 
   const reset = () => {
+    clearInterval(timerRef.current)
+    audioCtxRef.current?.close()
+    analyserRef.current = null
     setPhase('idle'); setDetections([]); setResult(null)
     setError(null); setLocationId(null); setPlaceName('')
+    setElapsed(0); setUserEditedPlace(false)
     chunksRef.current = []; allChunksRef.current = []
   }
 
@@ -553,9 +618,18 @@ function AudioTab({ coords, geoSuggestion }) {
             >
               <span className="w-7 h-7 rounded bg-white block" />
             </button>
-            <p className="text-sm font-medium" style={{ color: 'var(--bd-ink-soft)' }}>
-              Listening… tap to stop
-            </p>
+            <div className="flex items-center gap-2">
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: '#ef4444', animation: 'pulse 1.2s ease-in-out infinite' }}
+              />
+              <p className="text-sm font-medium tabular-nums" style={{ color: 'var(--bd-ink-soft)' }}>
+                {String(Math.floor(elapsed / 60)).padStart(2, '0')}:{String(elapsed % 60).padStart(2, '0')} — tap to stop
+              </p>
+            </div>
+            <div className="w-full px-1">
+              <LiveWaveform analyserRef={analyserRef} />
+            </div>
           </>
         )}
       </div>

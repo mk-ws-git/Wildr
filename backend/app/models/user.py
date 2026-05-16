@@ -17,4 +17,5 @@ class User(Base):
     share_sightings_community = Column(Boolean, default=True, nullable=False, server_default="true")
     anonymize_community_sightings = Column(Boolean, default=False, nullable=False, server_default="false")
     share_sightings_inat = Column(Boolean, default=False, nullable=False, server_default="false")
+    role = Column(String(20), nullable=False, server_default="'user'")  # user / trusted / admin — backend only
     created_at = Column(DateTime(timezone=True), server_default=func.now())

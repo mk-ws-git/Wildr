@@ -621,3 +621,22 @@ INSERT INTO public.species (id, common_name, scientific_name, kingdom, rarity_ti
 INSERT INTO public.species (id, common_name, scientific_name, kingdom, rarity_tier, conservation_status, fun_fact, habitat, behaviour, seasonal_note, photos, audio_urls) VALUES (11, 'Common Kingfisher', 'Alcedo atthis', 'bird', 'uncommon', 'least_concern', 'Kingfishers have binocular vision underwater and can correct for light refraction when diving.', 'Clear, slow-moving rivers, streams, lakes, and canals with overhanging vegetation.', 'Perches motionless above water before plunge-diving to catch small fish.', 'Resident year-round; may move to estuaries and coasts in cold winters when rivers freeze.', '["https://commons.wikimedia.org/wiki/Special:FilePath/Alcedo_atthis_-_Riserva_Naturale_di_Confluenza,_Italy_-_8.jpg", "https://commons.wikimedia.org/wiki/Special:FilePath/Alcedo_atthis_male_-_Riserva_Naturale_di_Confluenza.jpg", "https://commons.wikimedia.org/wiki/Special:FilePath/Kingfisher-Alcedo-atthis.jpg"]', '["https://commons.wikimedia.org/wiki/Special:FilePath/Alcedo-atthis-call.ogg", "https://commons.wikimedia.org/wiki/Special:FilePath/Alcedo_atthis_IBXSCH01.ogg"]');
 INSERT INTO public.species (id, common_name, scientific_name, kingdom, rarity_tier, conservation_status, fun_fact, habitat, behaviour, seasonal_note, photos, audio_urls) VALUES (13, 'Red Kite', 'Milvus milvus', 'bird', 'rare', 'least_concern', 'Red Kites decorate their nests with litter and scraps of clothing — researchers use this to track nests.', 'Open woodland, farmland, and hillsides; stronghold in Wales and reintroduced across England.', 'Soars effortlessly on thermals; its distinctive forked tail makes it easy to identify in flight.', 'Resident year-round in the UK; continental birds may join UK populations in winter.', '["https://commons.wikimedia.org/wiki/Special:FilePath/Milvus_milvus_in_flight.jpg", "https://commons.wikimedia.org/wiki/Special:FilePath/Red_Kite_(Milvus_milvus)_in_flight_(2).jpg", "https://commons.wikimedia.org/wiki/Special:FilePath/Milvus_milvus_-_forked_tail.jpg"]', '["https://commons.wikimedia.org/wiki/Special:FilePath/Milvus-milvus-call.ogg", "https://commons.wikimedia.org/wiki/Special:FilePath/Milvus_milvus_IBXSCH01.ogg"]');
 INSERT INTO public.species (id, common_name, scientific_name, kingdom, rarity_tier, conservation_status, fun_fact, habitat, behaviour, seasonal_note, photos, audio_urls) VALUES (12, 'Peregrine Falcon', 'Falco peregrinus', 'bird', 'uncommon', 'least_concern', 'The Peregrine is the fastest animal on Earth, reaching over 320 km/h in a hunting stoop.', 'Cliff faces, tall buildings, bridges, and open country on every continent except Antarctica.', 'Hunts by stooping at high speed onto prey mid-air; kills with a blow from clenched talons.', 'Resident year-round in most of range; Arctic-breeding birds migrate south in winter.', '["https://commons.wikimedia.org/wiki/Special:FilePath/Falco_peregrinus_-_01_(cropped).jpg", "https://commons.wikimedia.org/wiki/Special:FilePath/Peregrine_falcon_(Falco_peregrinus)_in_flight.jpg", "https://commons.wikimedia.org/wiki/Special:FilePath/Falco_peregrinus_adult.jpg"]', '["https://commons.wikimedia.org/wiki/Special:FilePath/Falco-peregrinus-call.ogg", "https://commons.wikimedia.org/wiki/Special:FilePath/Falco_peregrinus_IBXSCH01.ogg"]');
+
+-- ─────────────────────────────────────────────
+-- MIGRATIONS — apply manually via Supabase dashboard or MCP
+-- ─────────────────────────────────────────────
+
+-- 2026-05-16: role column on users (trusted / admin for backend-only gating)
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS role character varying(20) NOT NULL DEFAULT 'user';
+
+-- 2026-05-16: content_flags table for community error reporting
+CREATE TABLE IF NOT EXISTS public.content_flags (
+    id serial PRIMARY KEY,
+    user_id integer NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    content_type character varying(30) NOT NULL,  -- 'location', 'greenspace', 'species'
+    content_id integer NOT NULL,
+    reason text NOT NULL,
+    status character varying(20) NOT NULL DEFAULT 'open',  -- open / resolved / dismissed
+    created_at timestamp with time zone DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS content_flags_status_idx ON public.content_flags (status, created_at DESC);

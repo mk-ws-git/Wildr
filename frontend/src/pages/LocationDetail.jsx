@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import api from '../api/client'
 import { useToast } from '../components/Toast'
+import FlagButton from '../components/FlagButton'
 
 function formatDate(value) {
   return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
@@ -181,6 +182,11 @@ export default function LocationDetail() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
         </svg>
       </Link>
+
+      {/* Flag */}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <FlagButton contentType="location" contentId={Number(id)} />
+      </div>
 
       {/* Sightings */}
       <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

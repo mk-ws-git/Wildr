@@ -15,7 +15,7 @@ from app.models.user_species import UserSpecies
 from app.models.location import Location
 from app.schemas.species import SpeciesResponse
 from app.utils.badges import award_badges
-from app.utils.inat import identify_photo
+from app.utils.inat import identify_photo, get_taxon_photos
 from app.utils.gbif import get_species_data
 from app.utils.claude_enrich import enrich_species
 from app.utils.r2 import upload_file
@@ -111,10 +111,11 @@ async def identify_photo_route(
     species = result.scalar_one_or_none()
 
     if not species:
-        # 4. Claude enrichment + GBIF in parallel
-        enrichment, gbif = await asyncio.gather(
+        # 4. Claude enrichment + GBIF + iNat photos in parallel
+        enrichment, gbif, inat_photos = await asyncio.gather(
             enrich_species(top["common_name"], top["scientific_name"]),
             get_species_data(top["scientific_name"]),
+            get_taxon_photos(top["scientific_name"], top.get("taxon_id")),
         )
         kingdom = KINGDOM_MAP.get(top["iconic_taxon"], "other")
         species = Species(
@@ -127,6 +128,7 @@ async def identify_photo_route(
             habitat=enrichment.get("habitat"),
             behaviour=enrichment.get("behaviour"),
             seasonal_note=enrichment.get("seasonal_note"),
+            photos=inat_photos,
         )
         db.add(species)
         await db.flush()
@@ -207,10 +209,11 @@ async def identify_audio_route(
     species = result.scalar_one_or_none()
 
     if not species:
-        # 5. Claude enrichment + GBIF in parallel
-        enrichment, gbif = await asyncio.gather(
+        # 5. Claude enrichment + GBIF + iNat photos in parallel
+        enrichment, gbif, inat_photos = await asyncio.gather(
             enrich_species(top["common_name"], top["scientific_name"]),
             get_species_data(top["scientific_name"]),
+            get_taxon_photos(top["scientific_name"], top.get("taxon_id")),
         )
         species = Species(
             common_name=top["common_name"],
@@ -222,6 +225,7 @@ async def identify_audio_route(
             habitat=enrichment.get("habitat"),
             behaviour=enrichment.get("behaviour"),
             seasonal_note=enrichment.get("seasonal_note"),
+            photos=inat_photos,
         )
         db.add(species)
         await db.flush()
