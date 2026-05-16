@@ -55,7 +55,7 @@ class SightingResponse(BaseModel):
     weather_wind_deg: int | None = None
     weather_humidity: int | None = None
     weather_description: str | None = None
-    weather_code: int | None = None
+    weather_code: str | None = None
     weather_data: dict | None = None
     identified_at: datetime
 

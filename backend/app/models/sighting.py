@@ -31,7 +31,7 @@ class Sighting(Base):
     weather_wind_deg = Column(Integer)
     weather_humidity = Column(Integer)
     weather_description = Column(String(100))
-    weather_code = Column(Integer)
+    weather_code = Column(String(10))
     weather_data = Column(JSONB)
     identified_at = Column(DateTime(timezone=True), server_default=func.now())
 
