@@ -590,9 +590,9 @@ export default function Identify() {
   const coords = useGPS()
 
   return (
-    <div style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div style={{ minHeight: 'calc(100vh - 64px)', maxWidth: 640, margin: '0 auto', padding: '0 1rem' }}>
       {/* Header + tab switcher */}
-      <div className="flex items-center justify-between px-4 pt-6 pb-4">
+      <div className="flex items-center justify-between pt-6 pb-4">
         <h1 className="text-xl font-bold" style={{ color: 'var(--bd-ink)' }}>Identify</h1>
         <div
           className="flex p-1 rounded-full gap-1"
@@ -616,7 +616,7 @@ export default function Identify() {
       </div>
 
       {/* Tab content */}
-      <div className="px-4 pb-8">
+      <div className="pb-8">
         {tab === 'photo' ? <PhotoTab coords={coords} /> : <AudioTab coords={coords} />}
       </div>
     </div>
