@@ -69,18 +69,19 @@ function LocationPicker({ locationId, setLocationId }) {
 // ── Full-screen editorial result ───────────────────────────────────────────
 
 function ResultCard({ result, onReset }) {
-  const { species, score, uncertain, suggestions, show_endangered_banner, first_sighting, new_badges, photo_url } = result
+  const { species, score, uncertain, suggestions, show_endangered_banner, photo_url } = result
   const showToast = useToast()
-  const toastedBadges = useRef(false)
+  const [lifeListState, setLifeListState] = useState('prompt') // prompt | added | skipped
 
-  useEffect(() => {
-    if (!toastedBadges.current && new_badges?.length > 0) {
-      toastedBadges.current = true
-      new_badges.forEach((name, i) => {
-        setTimeout(() => showToast(`Badge unlocked: ${name}`), i * 700)
-      })
+  const addToLifeList = async () => {
+    try {
+      await api.post(`/species/${species.id}/life-list`)
+      setLifeListState('added')
+      showToast(`${species.common_name} added to your life list`)
+    } catch {
+      showToast('Could not add to life list')
     }
-  }, [new_badges, showToast])
+  }
 
   return (
     <div
@@ -112,12 +113,34 @@ function ResultCard({ result, onReset }) {
 
       {/* Top notifications */}
       <div className="absolute top-4 left-4 right-4 flex flex-col gap-2 z-10">
-        {first_sighting && (
+        {!uncertain && lifeListState === 'prompt' && (
+          <div
+            className="flex items-center justify-between gap-2 px-3 py-2 rounded-2xl text-sm text-white"
+            style={{ background: 'rgba(14,40,28,0.72)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)' }}
+          >
+            <span style={{ color: 'rgba(255,255,255,0.85)' }}>Add to life list?</span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={addToLifeList}
+                style={{ background: '#8bba2e', color: '#0f2a1c', border: 'none', borderRadius: '999px', padding: '4px 14px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setLifeListState('skipped')}
+                style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '999px', padding: '4px 14px', fontSize: '0.8rem', cursor: 'pointer' }}
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        )}
+        {lifeListState === 'added' && (
           <div
             className="flex items-center gap-2 px-3 py-2 rounded-2xl text-sm text-white"
             style={{ background: 'rgba(44,110,90,0.55)', backdropFilter: 'blur(12px)' }}
           >
-            ✓ First sighting — added to your life list
+            Added to your life list
           </div>
         )}
         {show_endangered_banner && (

@@ -179,6 +179,28 @@ async def unsave_species(
         await db.commit()
 
 
+@router.post("/{species_id}/life-list", status_code=status.HTTP_204_NO_CONTENT)
+async def add_to_life_list(
+    species_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    existing = (await db.execute(
+        select(UserSpecies).where(
+            UserSpecies.user_id == current_user.id,
+            UserSpecies.species_id == species_id,
+        )
+    )).scalar_one_or_none()
+    if existing:
+        if not existing.added_to_list:
+            existing.added_to_list = True
+            db.add(existing)
+            await db.commit()
+        return
+    db.add(UserSpecies(user_id=current_user.id, species_id=species_id, added_to_list=True))
+    await db.commit()
+
+
 @router.get("/{species_id}/sightings", response_model=list[SightingResponse])
 async def species_sightings(
     species_id: int,

@@ -154,9 +154,6 @@ async def identify_photo_route(
         weather_data=wx if wx else None,
     )
     db.add(sighting)
-    await db.flush()
-    first_sighting = await _upsert_user_species(db, current_user.id, species.id)
-    new_badges = await award_badges(current_user.id, db)
     await db.commit()
     await db.refresh(species)
     await db.refresh(sighting)
@@ -172,8 +169,6 @@ async def identify_photo_route(
         "uncertain": uncertain,
         "suggestions": suggestions,
         "show_endangered_banner": show_endangered_banner,
-        "first_sighting": first_sighting,
-        "new_badges": new_badges,
         "photo_url": photo_url,
     }
 
@@ -270,9 +265,6 @@ async def identify_audio_route(
         weather_data=wx if wx else None,
     )
     db.add(sighting)
-    await db.flush()
-    first_sighting = await _upsert_user_species(db, current_user.id, species.id)
-    new_badges = await award_badges(current_user.id, db)
     await db.commit()
     await db.refresh(species)
     await db.refresh(sighting)
@@ -288,6 +280,4 @@ async def identify_audio_route(
         "audio_url": audio_url,
         "waveform_data": waveform_data,
         "show_endangered_banner": show_endangered_banner,
-        "first_sighting": first_sighting,
-        "new_badges": new_badges,
     }
