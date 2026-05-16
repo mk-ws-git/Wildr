@@ -8,6 +8,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.password_reset import PasswordReset
 from app.models.invitation import Invitation
+from app.services.email import send_reset_email
 from app.schemas.user import UserCreate, UserLogin, UserResponse, Token
 from app.core.security import hash_password, verify_password
 from app.core.jwt import create_access_token
@@ -83,12 +84,8 @@ async def forgot_password(data: ForgotPasswordRequest, db: AsyncSession = Depend
     db.add(reset)
     await db.commit()
 
-    # No email service configured yet — return token directly for dev use
-    return {
-        "message": "Reset token generated.",
-        "reset_token": token,
-        "note": "No email service configured. Use this token at /reset-password.",
-    }
+    await send_reset_email(to_email=data.email, username=user.username, reset_token=token)
+    return {"message": "If that email is registered you will receive a reset link."}
 
 
 @router.post("/reset-password")
