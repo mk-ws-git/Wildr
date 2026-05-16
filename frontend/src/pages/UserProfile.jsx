@@ -26,6 +26,7 @@ export default function UserProfile() {
   const [profile, setProfile] = useState(null)
   const [sightings, setSightings] = useState([])
   const [badges, setBadges] = useState([])
+  const [levelData, setLevelData] = useState(null)
   const [friendship, setFriendship] = useState(null) // null | 'accepted' | 'pending_sent' | 'pending_received'
   const [friendshipId, setFriendshipId] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -41,10 +42,12 @@ export default function UserProfile() {
       api.get(`/badges/user/${id}`).then(r => r.data).catch(() => []),
       api.get('/friendships/me').then(r => r.data).catch(() => []),
       api.get('/friendships/pending').then(r => r.data).catch(() => []),
-    ]).then(([prof, sight, bdg, friends, pending]) => {
+      api.get(`/users/level/${id}`).then(r => r.data).catch(() => null),
+    ]).then(([prof, sight, bdg, friends, pending, lvl]) => {
       setProfile(prof)
       setSightings(sight)
       setBadges(bdg)
+      setLevelData(lvl)
 
       const uid = Number(id)
       const accepted = friends.find(f => (f.requester_id === uid || f.addressee_id === uid))
@@ -161,7 +164,7 @@ export default function UserProfile() {
         )}
 
         {/* Stats row */}
-        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--bd-rule-soft)' }}>
+        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--bd-rule-soft)', alignItems: 'center', flexWrap: 'wrap' }}>
           {[
             { label: 'Sightings', value: sightings.length },
             { label: 'Badges', value: badges.length },
@@ -171,6 +174,14 @@ export default function UserProfile() {
               <div style={{ fontSize: '0.75rem', color: 'var(--bd-ink-mute)', marginTop: '0.1rem' }}>{label}</div>
             </div>
           ))}
+          {levelData && (
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bd-bg-soft)', borderRadius: '999px', padding: '0.35rem 0.75rem 0.35rem 0.4rem' }}>
+              <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--bd-moss)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: '0.65rem', fontWeight: 800 }}>
+                {levelData.level}
+              </div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--bd-ink-mute)' }}>{levelData.level_name}</span>
+            </div>
+          )}
         </div>
       </div>
 

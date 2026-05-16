@@ -58,7 +58,8 @@ CREATE TABLE public.badges (
     name character varying(100) NOT NULL,
     description text,
     icon_url text,
-    criteria text
+    criteria text,
+    category character varying(50)
 );
 CREATE SEQUENCE public.badges_id_seq
     AS integer

@@ -9,3 +9,4 @@ class Badge(Base):
     description = Column(Text)
     icon_url = Column(Text)
     criteria = Column(Text)
+    category = Column(String(50))  # explorer | life_list | kingdom | rarity | conservation

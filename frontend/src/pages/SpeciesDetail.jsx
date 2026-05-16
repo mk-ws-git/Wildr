@@ -86,7 +86,7 @@ function PhotoGallery({ photos, commonName }) {
 
   if (visiblePhotos.length === 0) {
     return (
-      <div className="w-full h-72 bg-gray-100 rounded-xl flex items-center justify-center">
+      <div className="w-full h-72 rounded-xl flex items-center justify-center" style={{ background: 'var(--bd-bg-soft)' }}>
         <IconBird />
       </div>
     )
@@ -96,7 +96,7 @@ function PhotoGallery({ photos, commonName }) {
   const safeIdx = Math.min(idx, visiblePhotos.length - 1)
 
   return (
-    <div className="relative rounded-xl overflow-hidden bg-gray-100">
+    <div className="relative rounded-xl overflow-hidden" style={{ background: 'var(--bd-bg-soft)' }}>
       <img
         src={current}
         alt={commonName}

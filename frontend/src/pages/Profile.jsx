@@ -76,10 +76,42 @@ function Toggle({ checked, onChange, label, description }) {
 
 // ── Tab: View ─────────────────────────────────────────────────────────────
 
+function LevelBadge({ level, levelName, xp, xpForNext, progressPct }) {
+  return (
+    <div style={{ background: 'var(--bd-bg)', borderRadius: '1rem', padding: '0.75rem 1.1rem', minWidth: 140 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+        <div style={{
+          width: 24, height: 24, borderRadius: '50%',
+          background: 'var(--bd-moss)', color: '#fff',
+          display: 'grid', placeItems: 'center',
+          fontSize: '0.7rem', fontWeight: 800, flexShrink: 0,
+        }}>{level}</div>
+        <div>
+          <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--bd-ink)', margin: 0 }}>{levelName}</p>
+          <p style={{ fontSize: '0.68rem', color: 'var(--bd-ink-mute)', margin: 0 }}>{xp.toLocaleString()} XP</p>
+        </div>
+      </div>
+      <div style={{ height: 4, borderRadius: 999, background: 'var(--bd-rule-soft)', overflow: 'hidden' }}>
+        <div style={{ height: '100%', borderRadius: 999, background: 'var(--bd-moss)', width: `${progressPct}%`, transition: 'width 0.5s ease' }} />
+      </div>
+      {xpForNext && (
+        <p style={{ fontSize: '0.65rem', color: 'var(--bd-ink-soft)', marginTop: '0.3rem', margin: '0.3rem 0 0' }}>
+          {(xpForNext - xp).toLocaleString()} XP to next level
+        </p>
+      )}
+    </div>
+  )
+}
+
 function ViewTab({ user, recentSightings, allSightings, badges, friendships, savedLocations, lifeList, loading, onEdit }) {
+  const [levelData, setLevelData] = useState(null)
   const acceptedFriends = friendships.filter(f => f.status === 'accepted')
   const pendingRequests = friendships.filter(f => f.status === 'pending' && f.addressee_id === user.id)
   const outgoingRequests = friendships.filter(f => f.status === 'pending' && f.requester_id === user.id)
+
+  useEffect(() => {
+    api.get('/users/me/level').then(({ data }) => setLevelData(data)).catch(() => {})
+  }, [])
 
   const lifeListByKingdom = useMemo(() => {
     const groups = {}
@@ -113,7 +145,16 @@ function ViewTab({ user, recentSightings, allSightings, badges, friendships, sav
               {user.location_name && <p style={{ ...muted, marginTop: '0.15rem' }}>{user.location_name}</p>}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {levelData && (
+              <LevelBadge
+                level={levelData.level}
+                levelName={levelData.level_name}
+                xp={levelData.xp}
+                xpForNext={levelData.xp_for_next}
+                progressPct={levelData.progress_pct}
+              />
+            )}
             <div style={{ background: 'var(--bd-bg)', borderRadius: '1rem', padding: '0.75rem 1.25rem', fontSize: '0.8rem' }}>
               <p style={{ ...muted, marginBottom: '0.2rem' }}>Member since</p>
               <p style={{ ...ink, fontWeight: 600 }}>{formatDate(user.created_at)}</p>
