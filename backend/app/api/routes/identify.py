@@ -8,6 +8,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.deps import get_current_user
 from app.database import get_db
+from app.services.weather import fetch_weather
 from app.models.user import User
 from app.models.species import Species
 from app.models.sighting import Sighting
@@ -133,7 +134,8 @@ async def identify_photo_route(
         db.add(species)
         await db.flush()
 
-    # 5. Save sighting
+    # 5. Save sighting (fetch weather in parallel with nothing, just await it)
+    wx = await fetch_weather(lat, lng) if lat and lng else None
     point = f"SRID=4326;POINT({lng} {lat})" if lat and lng else None
     sighting = Sighting(
         user_id=current_user.id,
@@ -142,6 +144,14 @@ async def identify_photo_route(
         location=point,
         place_name=place_name,
         photo_url=photo_url,
+        weather_temp_c=wx.get("temp_c") if wx else None,
+        weather_feels_like_c=wx.get("feels_like_c") if wx else None,
+        weather_wind_speed_ms=round(wx["wind_kph"] / 3.6, 2) if wx else None,
+        weather_wind_deg=wx.get("wind_deg") if wx else None,
+        weather_humidity=wx.get("humidity") if wx else None,
+        weather_description=wx.get("description") if wx else None,
+        weather_code=wx.get("icon_code") if wx else None,
+        weather_data=wx if wx else None,
     )
     db.add(sighting)
     await db.flush()
@@ -240,6 +250,7 @@ async def identify_audio_route(
         await db.flush()
 
     # 6. Save sighting
+    wx = await fetch_weather(lat, lng) if lat and lng else None
     point = f"SRID=4326;POINT({lng} {lat})" if lat and lng else None
     sighting = Sighting(
         user_id=current_user.id,
@@ -249,6 +260,14 @@ async def identify_audio_route(
         place_name=place_name,
         audio_url=audio_url,
         waveform_data=waveform_data,
+        weather_temp_c=wx.get("temp_c") if wx else None,
+        weather_feels_like_c=wx.get("feels_like_c") if wx else None,
+        weather_wind_speed_ms=round(wx["wind_kph"] / 3.6, 2) if wx else None,
+        weather_wind_deg=wx.get("wind_deg") if wx else None,
+        weather_humidity=wx.get("humidity") if wx else None,
+        weather_description=wx.get("description") if wx else None,
+        weather_code=wx.get("icon_code") if wx else None,
+        weather_data=wx if wx else None,
     )
     db.add(sighting)
     await db.flush()
