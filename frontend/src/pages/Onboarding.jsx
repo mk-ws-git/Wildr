@@ -4,13 +4,29 @@ import api from '../api/client'
 import useAuthStore from '../store/authStore'
 import AuthShell, { AuthTextarea, AuthField, AuthBtn } from '../components/AuthShell'
 
+const InterestIcon = ({ id }) => {
+  const icons = {
+    birds: <path d="M12 2C9 2 6 4 6 7c0 2 1 3.5 2.5 4.5L6 20h12l-2.5-8.5C17 10.5 18 9 18 7c0-3-3-5-6-5zm0 3c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z"/>,
+    mammals: <><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><path d="M8 4.5C7 3.5 5 3 4 4M16 4.5C17 3.5 19 3 20 4"/></>,
+    insects: <><path d="M12 8a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M12 8v12M8 10l-4 2M16 10l4 2M6 16l-3 2M18 16l3 2"/></>,
+    plants: <path d="M12 22V12M12 12C12 7 7 5 4 7c3 0 5 2 8 5M12 12c0-5 5-7 8-5-3 0-5 2-8 5"/>,
+    fungi: <><path d="M5 12c0-3.9 3.1-7 7-7s7 3.1 7 7H5z"/><path d="M9 12v5a3 3 0 0 0 6 0v-5"/></>,
+    reptiles: <><path d="M21 16s-3-2-6-2-4 2-4 2"/><path d="M3 16s2-3 5-4 7 0 9 3"/><path d="M9 20l3-8 3 8"/><circle cx="12" cy="8" r="2"/></>,
+  }
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+      {icons[id]}
+    </svg>
+  )
+}
+
 const INTERESTS = [
-  { id: 'birds', label: 'Birds', emoji: '🐦' },
-  { id: 'mammals', label: 'Mammals', emoji: '🦊' },
-  { id: 'insects', label: 'Insects', emoji: '🦋' },
-  { id: 'plants', label: 'Plants', emoji: '🌿' },
-  { id: 'fungi', label: 'Fungi', emoji: '🍄' },
-  { id: 'reptiles', label: 'Reptiles', emoji: '🦎' },
+  { id: 'birds', label: 'Birds' },
+  { id: 'mammals', label: 'Mammals' },
+  { id: 'insects', label: 'Insects' },
+  { id: 'plants', label: 'Plants' },
+  { id: 'fungi', label: 'Fungi' },
+  { id: 'reptiles', label: 'Reptiles' },
 ]
 
 function StepDots({ step, total }) {
@@ -211,7 +227,7 @@ export default function Onboarding() {
               Interests <span style={{ fontWeight: 400, color: 'var(--bd-ink-mute)' }}>(optional)</span>
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              {INTERESTS.map(({ id, label, emoji }) => {
+              {INTERESTS.map(({ id, label }) => {
                 const active = interests.has(id)
                 return (
                   <button
@@ -229,7 +245,7 @@ export default function Onboarding() {
                       cursor: 'pointer', transition: 'all 0.15s',
                     }}
                   >
-                    <span>{emoji}</span>
+                    <InterestIcon id={id} />
                     <span>{label}</span>
                   </button>
                 )

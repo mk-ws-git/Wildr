@@ -901,8 +901,8 @@ export default function Home() {
           <div className="rounded-3xl p-6 shadow-sm" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}>
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <h2 className="text-base font-semibold" style={{ color: 'var(--bd-ink)' }}>Recently within 1 mile</h2>
-                <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>Latest sightings nearby</p>
+                <h2 className="text-base font-semibold" style={{ color: 'var(--bd-ink)' }}>Your recent sightings</h2>
+                <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>Latest from your life list</p>
               </div>
               <Link to="/sightings" className="text-sm font-semibold" style={{ color: 'var(--bd-moss)', textDecoration: 'none', flexShrink: 0 }}>View all</Link>
             </div>
@@ -915,12 +915,12 @@ export default function Home() {
                 <div className="flex flex-col items-center py-6 gap-3">
                   <PineTrees size="sm" />
                   <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>
-                    Head out and <Link to="/log" style={{ color: 'var(--bd-moss)', textDecoration: 'none', fontWeight: 600 }}>log a sighting</Link>!
+                    Head out and <Link to="/log-sighting" style={{ color: 'var(--bd-moss)', textDecoration: 'none', fontWeight: 600 }}>log a sighting</Link>!
                   </p>
                 </div>
               ) : (
                 sightings.slice(0, 3).map((sighting) => (
-                  <div key={sighting.id} className="rounded-2xl flex items-center gap-0 overflow-hidden" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}>
+                  <Link key={sighting.id} to={`/species/${sighting.species_id}`} className="rounded-2xl flex items-center gap-0 overflow-hidden" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', textDecoration: 'none', display: 'flex' }}>
                     <div className="w-14 h-14 flex-shrink-0" style={{ backgroundColor: 'var(--bd-bg-soft)' }}>
                       {sighting.photo_url
                         ? <img src={sighting.photo_url} alt={sighting.common_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -931,7 +931,10 @@ export default function Home() {
                       <div className="text-xs italic" style={{ color: 'var(--bd-ink-mute)' }}>{sighting.scientific_name}</div>
                       <div className="text-xs" style={{ color: 'var(--bd-ink-soft)' }}>{formatDate(sighting.identified_at)}{sighting.place_name ? ` · ${sighting.place_name}` : ''}</div>
                     </div>
-                  </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 flex-shrink-0" style={{ color: 'var(--bd-ink-mute)' }}>
+                      <path d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </Link>
                 ))
               )}
             </div>
@@ -940,15 +943,18 @@ export default function Home() {
 
         <aside className="space-y-6">
           <div className="rounded-3xl p-6 shadow-sm" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}>
-            <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--bd-ink)' }}>Saved places</h2>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--bd-ink)' }}>Saved places</h2>
+              <Link to="/map" className="text-sm font-semibold" style={{ color: 'var(--bd-moss)', textDecoration: 'none' }}>Open map</Link>
+            </div>
             <p className="text-sm mb-5" style={{ color: 'var(--bd-ink-soft)' }}>Your visited and want-to-visit marks</p>
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl p-4 bg-slate-50">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Want to Visit</div>
+              <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--bd-bg-soft)' }}>
+                <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--bd-ink-mute)' }}>Want to Visit</div>
                 <div className="mt-3 text-2xl font-bold" style={{ color: 'var(--bd-ink)' }}>{formatCount(wantToVisitCount)}</div>
               </div>
-              <div className="rounded-2xl p-4 bg-slate-50">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Visited</div>
+              <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--bd-bg-soft)' }}>
+                <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--bd-ink-mute)' }}>Visited</div>
                 <div className="mt-3 text-2xl font-bold" style={{ color: 'var(--bd-ink)' }}>{formatCount(visitedCount)}</div>
               </div>
             </div>

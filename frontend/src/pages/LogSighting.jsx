@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import api from '../api/client'
 
 function useGPS() {
@@ -140,7 +140,10 @@ export default function LogSighting() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-6 space-y-5">
-      <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--bd-ink)' }}>Log a sighting</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <Link to="/sightings" style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', textDecoration: 'none' }}>← Back</Link>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--bd-ink)', margin: 0 }}>Log a sighting</h1>
+      </div>
       <p style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', marginTop: '-0.5rem' }}>
         Record a species you've spotted without using the camera or microphone.
       </p>

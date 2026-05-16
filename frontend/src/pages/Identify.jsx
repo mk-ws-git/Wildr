@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import api from '../api/client'
 import { useToast } from '../components/Toast'
 
@@ -585,7 +585,8 @@ function AudioTab({ coords }) {
 // ── Page shell ─────────────────────────────────────────────────────────────
 
 export default function Identify() {
-  const [tab, setTab] = useState('photo')
+  const { pathname } = useLocation()
+  const [tab, setTab] = useState(pathname === '/identify/audio' ? 'audio' : 'photo')
   const coords = useGPS()
 
   return (

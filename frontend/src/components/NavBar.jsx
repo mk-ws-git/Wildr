@@ -94,12 +94,19 @@ export default function NavBar() {
 
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
 
+  const [logoutConfirm, setLogoutConfirm] = useState(false)
+
   const handleLogout = () => {
+    if (!logoutConfirm) { setLogoutConfirm(true); return }
+    setLogoutConfirm(false)
     setDropdownOpen(false)
     setMobileOpen(false)
     logout()
     navigate('/login')
   }
+
+  // Reset confirm state if dropdown closes
+  useEffect(() => { if (!dropdownOpen && !mobileOpen) setLogoutConfirm(false) }, [dropdownOpen, mobileOpen])
 
   const unreadCount = notifications.filter(n => !n.is_read).length
 
@@ -267,8 +274,8 @@ export default function NavBar() {
                     >{label}</Link>
                   ))}
                   <div style={{ borderTop: '1px solid var(--bd-rule-soft)', margin: '4px 0' }} />
-                  <button onClick={handleLogout} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 16px', fontSize: '0.875rem', color: 'var(--bd-ink-mute)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    Log out
+                  <button onClick={handleLogout} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '8px 16px', fontSize: '0.875rem', color: logoutConfirm ? 'var(--bd-terra)' : 'var(--bd-ink-mute)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: logoutConfirm ? 600 : 400 }}>
+                    {logoutConfirm ? 'Tap again to confirm' : 'Log out'}
                   </button>
                 </div>
               )}
@@ -314,8 +321,8 @@ export default function NavBar() {
                   {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
                 </Link>
               )}
-              <button onClick={handleLogout} style={{ background: 'none', border: 'none', textAlign: 'left', fontSize: '0.875rem', color: 'var(--bd-ink-mute)', padding: '0.625rem 0', cursor: 'pointer' }}>
-                Log out
+              <button onClick={handleLogout} style={{ background: 'none', border: 'none', textAlign: 'left', fontSize: '0.875rem', color: logoutConfirm ? 'var(--bd-terra)' : 'var(--bd-ink-mute)', padding: '0.625rem 0', cursor: 'pointer', fontWeight: logoutConfirm ? 600 : 400 }}>
+                {logoutConfirm ? 'Tap again to confirm' : 'Log out'}
               </button>
             </>
           )}

@@ -8,8 +8,9 @@ from app.models.location_save import LocationSave
 from app.models.location_review import LocationReview
 from app.models.user_location import UserLocation
 from app.models.sighting import Sighting
+from app.models.species import Species
 from app.schemas.location import LocationCreate, LocationUpdate, LocationResponse
-from app.schemas.sighting import SightingResponse
+from app.schemas.sighting import SightingResponse, SightingWithSpecies
 from app.schemas.review import ReviewCreate, ReviewUpdate, LocationReviewResponse
 from app.core.deps import get_current_user
 from app.models.user import User
@@ -93,19 +94,29 @@ async def my_saved_locations(
     ]
 
 
-@router.get("/{location_id}/sightings", response_model=list[SightingResponse])
+@router.get("/{location_id}/sightings", response_model=list[SightingWithSpecies])
 async def location_sightings(
     location_id: int,
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
     rows = (await db.execute(
-        select(Sighting)
+        select(Sighting, Species.common_name, Species.scientific_name, Species.kingdom, Species.rarity_tier)
+        .join(Species, Sighting.species_id == Species.id)
         .where(Sighting.location_id == location_id, Sighting.is_private == False)
         .order_by(Sighting.identified_at.desc())
         .limit(50)
-    )).scalars().all()
-    return rows
+    )).all()
+    return [
+        SightingWithSpecies(
+            **{c: getattr(row.Sighting, c) for c in row.Sighting.__table__.columns.keys()},
+            common_name=row.common_name,
+            scientific_name=row.scientific_name,
+            kingdom=row.kingdom,
+            rarity_tier=row.rarity_tier,
+        )
+        for row in rows
+    ]
 
 
 @router.post("/{location_id}/save", status_code=status.HTTP_204_NO_CONTENT)

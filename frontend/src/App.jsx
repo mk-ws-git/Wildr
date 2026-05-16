@@ -24,6 +24,8 @@ import Friends from './pages/Friends'
 import Notifications from './pages/Notifications'
 import Settings from './pages/Settings'
 import Onboarding from './pages/Onboarding'
+import UserProfile from './pages/UserProfile'
+import NotFound from './pages/NotFound'
 import api from './api/client'
 import useAuthStore from './store/authStore'
 import { ToastProvider } from './components/Toast'
@@ -78,6 +80,8 @@ export default function App() {
         <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+        <Route path="/users/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </ToastProvider>
   )

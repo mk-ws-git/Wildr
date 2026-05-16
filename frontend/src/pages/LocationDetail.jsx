@@ -39,9 +39,12 @@ function SightingRow({ sighting }) {
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--bd-ink)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          Species #{sighting.species_id}
+          {sighting.common_name || `Species #${sighting.species_id}`}
         </p>
-        <p style={{ fontSize: '0.75rem', color: 'var(--bd-ink-mute)', margin: 0 }}>{formatDate(sighting.identified_at)}</p>
+        {sighting.scientific_name && (
+          <p style={{ fontSize: '0.72rem', fontStyle: 'italic', color: 'var(--bd-ink-mute)', margin: '0.1rem 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sighting.scientific_name}</p>
+        )}
+        <p style={{ fontSize: '0.75rem', color: 'var(--bd-ink-mute)', margin: '0.1rem 0 0' }}>{formatDate(sighting.identified_at)}</p>
       </div>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--bd-ink-mute)', flexShrink: 0 }}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>

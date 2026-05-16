@@ -75,6 +75,40 @@ async def my_sightings(
     ]
 
 
+@router.get("/user/{user_id}", response_model=list[SightingWithSpecies])
+async def user_sightings(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+    limit: int = Query(50, ge=1, le=200),
+):
+    """Public sightings for any user (non-private only)."""
+    result = await db.execute(
+        select(
+            Sighting,
+            Species.common_name,
+            Species.scientific_name,
+            Species.kingdom,
+            Species.rarity_tier,
+        )
+        .join(Species, Sighting.species_id == Species.id)
+        .where(Sighting.user_id == user_id, Sighting.is_private == False)
+        .order_by(Sighting.identified_at.desc())
+        .limit(limit)
+    )
+    rows = result.all()
+    return [
+        SightingWithSpecies(
+            **SightingResponse.model_validate(row.Sighting).model_dump(),
+            common_name=row.common_name,
+            scientific_name=row.scientific_name,
+            kingdom=row.kingdom,
+            rarity_tier=row.rarity_tier,
+        )
+        for row in rows
+    ]
+
+
 @router.patch("/me/{sighting_id}", response_model=SightingResponse)
 async def update_sighting(
     sighting_id: int,

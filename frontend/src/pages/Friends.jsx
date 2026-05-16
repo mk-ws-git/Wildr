@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../api/client'
 import useAuthStore from '../store/authStore'
 import PineTrees from '../components/PineTrees'
@@ -25,7 +26,9 @@ function UserRow({ user, action }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.625rem 0', borderBottom: '1px solid var(--bd-rule-soft)' }}>
       <Avatar user={user} />
-      <span style={{ flex: 1, fontWeight: 500, fontSize: '0.9rem', color: 'var(--bd-ink)' }}>{user.username}</span>
+      <Link to={`/users/${user.id}`} style={{ flex: 1, fontWeight: 500, fontSize: '0.9rem', color: 'var(--bd-ink)', textDecoration: 'none' }}>
+        {user.username}
+      </Link>
       {action}
     </div>
   )

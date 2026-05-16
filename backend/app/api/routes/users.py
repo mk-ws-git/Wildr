@@ -81,6 +81,15 @@ async def change_password(
     await db.commit()
 
 
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await db.delete(current_user)
+    await db.commit()
+
+
 @router.get("/me/species", response_model=list[UserSpeciesResponse])
 async def my_life_list(
     current_user: User = Depends(get_current_user),

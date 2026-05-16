@@ -214,43 +214,49 @@ export default function Sightings() {
         {visible.map(s => (
           <div
             key={s.id}
-            style={{ display: 'flex', gap: '1rem', background: 'var(--bd-card)', borderRadius: '1rem', border: '1px solid var(--bd-rule-soft)', overflow: 'hidden', alignItems: 'stretch' }}
+            style={{ display: 'flex', background: 'var(--bd-card)', borderRadius: '1rem', border: '1px solid var(--bd-rule-soft)', overflow: 'hidden', alignItems: 'stretch' }}
           >
-            {/* Thumbnail */}
-            <div style={{ width: 88, minWidth: 88, background: 'var(--bd-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--bd-rule)' }}>
-              {s.photo_url
-                ? <img src={s.photo_url} alt={s.common_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <CameraIcon />}
-            </div>
+            {/* Tappable: thumbnail + content → species detail */}
+            <Link
+              to={`/species/${s.species_id}`}
+              style={{ display: 'flex', gap: '1rem', flex: 1, minWidth: 0, textDecoration: 'none' }}
+            >
+              {/* Thumbnail */}
+              <div style={{ width: 88, minWidth: 88, background: 'var(--bd-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--bd-rule)', flexShrink: 0 }}>
+                {s.photo_url
+                  ? <img src={s.photo_url} alt={s.common_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <CameraIcon />}
+              </div>
 
-            {/* Content */}
-            <div style={{ padding: '0.875rem 0.5rem 0.875rem 0', flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ fontWeight: 700, color: 'var(--bd-ink)', margin: 0, lineHeight: 1.3 }}>{s.common_name}</p>
-                  <p style={{ fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--bd-ink-mute)', margin: '0.1rem 0 0' }}>{s.scientific_name}</p>
+              {/* Content */}
+              <div style={{ padding: '0.875rem 0.5rem 0.875rem 0', flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontWeight: 700, color: 'var(--bd-ink)', margin: 0, lineHeight: 1.3 }}>{s.common_name}</p>
+                    <p style={{ fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--bd-ink-mute)', margin: '0.1rem 0 0' }}>{s.scientific_name}</p>
+                  </div>
+                  {RARITY_LABELS[s.rarity_tier] && (
+                    <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.5rem', borderRadius: '999px', background: 'var(--bd-bg)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-mute)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      {RARITY_LABELS[s.rarity_tier]}
+                    </span>
+                  )}
                 </div>
-                {RARITY_LABELS[s.rarity_tier] && (
-                  <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '0.2rem 0.5rem', borderRadius: '999px', background: 'var(--bd-bg)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-mute)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    {RARITY_LABELS[s.rarity_tier]}
-                  </span>
+                <p style={{ fontSize: '0.78rem', color: 'var(--bd-ink-mute)', margin: '0.4rem 0 0' }}>
+                  {formatDate(s.identified_at)}
+                  {s.place_name && <span> · {s.place_name}</span>}
+                </p>
+                {s.weather_description && (
+                  <p style={{ fontSize: '0.75rem', color: 'var(--bd-ink-mute)', margin: '0.2rem 0 0' }}>
+                    {s.weather_temp_c != null ? `${Math.round(s.weather_temp_c)}°C · ` : ''}{s.weather_description}
+                  </p>
+                )}
+                {s.notes && (
+                  <p style={{ fontSize: '0.78rem', color: 'var(--bd-ink-soft)', margin: '0.2rem 0 0', fontStyle: 'italic' }}>{s.notes}</p>
                 )}
               </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--bd-ink-mute)', margin: '0.4rem 0 0' }}>
-                {formatDate(s.identified_at)}
-                {s.place_name && <span> · {s.place_name}</span>}
-              </p>
-              {s.weather_description && (
-                <p style={{ fontSize: '0.75rem', color: 'var(--bd-ink-mute)', margin: '0.2rem 0 0' }}>
-                  {s.weather_temp_c != null ? `${Math.round(s.weather_temp_c)}°C · ` : ''}{s.weather_description}
-                </p>
-              )}
-              {s.notes && (
-                <p style={{ fontSize: '0.78rem', color: 'var(--bd-ink-soft)', margin: '0.2rem 0 0', fontStyle: 'italic' }}>{s.notes}</p>
-              )}
-            </div>
+            </Link>
 
-            {/* Actions */}
+            {/* Actions (not part of the link) */}
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.25rem', padding: '0.75rem 0.75rem 0.75rem 0', flexShrink: 0 }}>
               <button
                 onClick={() => setEditTarget(s)}
