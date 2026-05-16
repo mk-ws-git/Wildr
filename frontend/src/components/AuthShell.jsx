@@ -212,7 +212,7 @@ export function AuthTextarea({ label, id, ...props }) {
   )
 }
 
-export function AuthBtn({ children, loading, variant = 'primary', ...props }) {
+export function AuthBtn({ children, loading, variant = 'primary', style: extraStyle, ...props }) {
   const base = {
     width: '100%',
     padding: '0.8rem',
@@ -230,7 +230,7 @@ export function AuthBtn({ children, loading, variant = 'primary', ...props }) {
     ghost: { background: 'rgba(255,255,255,0.10)', color: '#ffffff', border: '1.5px solid rgba(255,255,255,0.22)' },
   }
   return (
-    <button disabled={loading} style={{ ...base, ...variants[variant] }} {...props}>
+    <button disabled={loading} style={{ ...base, ...variants[variant], ...extraStyle }} {...props}>
       {loading ? '…' : children}
     </button>
   )

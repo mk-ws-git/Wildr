@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import api from '../api/client'
 import useAuthStore from '../store/authStore'
-import AuthShell, { AuthHeading, AuthField, AuthBtn, AuthError, AuthLinks } from '../components/AuthShell'
+import AuthShell, { AuthHeading, AuthField, AuthBtn, AuthLinkBtn, AuthError } from '../components/AuthShell'
 
 export default function Register() {
   const [form, setForm] = useState({ username: '', email: '', password: '' })
@@ -43,13 +43,12 @@ export default function Register() {
           alignItems: 'center',
           gap: '0.6rem',
           background: 'rgba(44,110,90,0.10)',
-          border: '1px solid rgba(44,110,90,0.22)',
+          border: '1px solid rgba(139,186,46,0.30)',
           borderRadius: '0.75rem',
           padding: '0.65rem 0.875rem',
           marginBottom: '1.25rem',
         }}>
-          <span style={{ fontSize: '1rem' }}>🌿</span>
-          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--bd-moss-deep)', fontWeight: 500 }}>
+          <p style={{ margin: 0, fontSize: '0.85rem', color: '#8bba2e', fontWeight: 500 }}>
             You've been invited to Wildr! Create your account to get started.
           </p>
         </div>
@@ -87,16 +86,11 @@ export default function Register() {
           required
           minLength={8}
         />
-        <AuthBtn loading={loading} style={{ marginTop: '0.25rem' }}>Create account</AuthBtn>
+        <AuthBtn loading={loading}>Create account</AuthBtn>
       </form>
-      <AuthLinks>
-        <span>
-          Already have an account?{' '}
-          <Link to="/login" style={{ color: 'var(--bd-moss)', fontWeight: 600, textDecoration: 'none' }}>
-            Log in
-          </Link>
-        </span>
-      </AuthLinks>
+      <div style={{ marginTop: '0.75rem' }}>
+        <AuthLinkBtn to="/login">Log in</AuthLinkBtn>
+      </div>
     </AuthShell>
   )
 }
