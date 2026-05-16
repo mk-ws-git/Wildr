@@ -2,10 +2,15 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from app.core.config import settings
 
 connect_args = {}
-if "pooler.supabase.com" in settings.DATABASE_URL:
-    connect_args["prepared_statement_cache_size"] = 0
+url = settings.DATABASE_URL
 
-engine = create_async_engine(settings.DATABASE_URL, echo=False, connect_args=connect_args)
+if "supabase.co" in url or "pooler.supabase.com" in url:
+    connect_args["ssl"] = "require"
+if "pooler.supabase.com" in url:
+    connect_args["prepared_statement_cache_size"] = 0
+    connect_args["no_prepared_statements"] = True
+
+engine = create_async_engine(url, echo=False, connect_args=connect_args)
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
