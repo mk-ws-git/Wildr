@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 from geoalchemy2 import Geography
 from geoalchemy2.shape import to_shape
@@ -12,6 +13,7 @@ class Location(Base):
     type = Column(String(100))
     centre_point = Column(Geography(geometry_type="POINT", srid=4326))
     radius_metres = Column(Integer)
+    facilities = Column(JSONB, nullable=False, server_default="'[]'")
     source = Column(String(20), nullable=False, server_default="auto")
     created_by = Column(Integer, ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())

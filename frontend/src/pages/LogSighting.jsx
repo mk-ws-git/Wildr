@@ -55,6 +55,7 @@ export default function LogSighting() {
 
   const [placeName, setPlaceName] = useState('')
   const [pastPlaceNames, setPastPlaceNames] = useState([])
+  const [facilities, setFacilities] = useState([])
   const [notes, setNotes] = useState('')
   const [locationId, setLocationId] = useState(null)
   const [locations, setLocations] = useState([])
@@ -93,6 +94,9 @@ export default function LogSighting() {
     setSuggestions([])
   }
 
+  const toggleFacility = (key) =>
+    setFacilities(prev => prev.includes(key) ? prev.filter(f => f !== key) : [...prev, key])
+
   const submit = async () => {
     if (!selectedSpecies) { setError('Please select a species.'); return }
     setSaving(true)
@@ -122,7 +126,7 @@ export default function LogSighting() {
         <p style={{ color: 'var(--bd-ink-mute)', fontSize: '0.875rem' }}>{selectedSpecies.common_name} added to your life list.</p>
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
-            onClick={() => { setDone(false); setSelectedSpecies(null); setQuery(''); setPlaceName(''); setNotes('') }}
+            onClick={() => { setDone(false); setSelectedSpecies(null); setQuery(''); setPlaceName(''); setNotes(''); setFacilities([]) }}
             style={{ padding: '0.5rem 1.25rem', borderRadius: '999px', background: 'var(--bd-moss)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}
           >
             Log another
@@ -190,6 +194,49 @@ export default function LogSighting() {
 
       {/* Place nickname */}
       <PlaceNameInput value={placeName} onChange={setPlaceName} pastNames={pastPlaceNames} />
+
+      {/* Facilities — only shown when entering a new place nickname */}
+      {placeName.trim() && (
+        <div>
+          <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--bd-ink-mute)', marginBottom: 6 }}>Facilities at this spot (optional)</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {[
+              { key: 'bbq', label: 'BBQ' },
+              { key: 'playground', label: 'Playground' },
+              { key: 'washrooms', label: 'Washrooms' },
+              { key: 'sports_field', label: 'Sports field' },
+              { key: 'picnic', label: 'Picnic area' },
+              { key: 'car_park', label: 'Car park' },
+              { key: 'cycling', label: 'Cycling' },
+              { key: 'dog_friendly', label: 'Dog friendly' },
+              { key: 'cafe', label: 'Cafe' },
+              { key: 'fishing', label: 'Fishing' },
+            ].map(({ key, label }) => {
+              const active = facilities.includes(key)
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleFacility(key)}
+                  style={{
+                    padding: '0.3rem 0.75rem',
+                    borderRadius: '999px',
+                    fontSize: '0.78rem',
+                    fontWeight: active ? 600 : 400,
+                    border: `1px solid ${active ? 'var(--bd-moss)' : 'var(--bd-rule)'}`,
+                    background: active ? 'var(--bd-moss)' : 'var(--bd-card)',
+                    color: active ? '#fff' : 'var(--bd-ink-soft)',
+                    cursor: 'pointer',
+                    transition: 'all 0.1s',
+                  }}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Named location */}
       <div>

@@ -640,3 +640,6 @@ CREATE TABLE IF NOT EXISTS public.content_flags (
     created_at timestamp with time zone DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS content_flags_status_idx ON public.content_flags (status, created_at DESC);
+
+-- 2026-05-16: facilities on locations (array of amenity strings)
+ALTER TABLE public.locations ADD COLUMN IF NOT EXISTS facilities jsonb NOT NULL DEFAULT '[]';

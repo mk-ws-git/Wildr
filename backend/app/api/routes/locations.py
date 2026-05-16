@@ -52,6 +52,7 @@ async def create_location(
         type=body.type,
         centre_point=f"SRID=4326;POINT({body.lng} {body.lat})",
         radius_metres=body.radius_metres,
+        facilities=body.facilities,
         source="user",
         created_by=current_user.id,
     )

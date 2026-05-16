@@ -26,6 +26,7 @@ import Settings from './pages/Settings'
 import Onboarding from './pages/Onboarding'
 import UserProfile from './pages/UserProfile'
 import Search from './pages/Search'
+import Import from './pages/Import'
 import NotFound from './pages/NotFound'
 import api from './api/client'
 import useAuthStore from './store/authStore'
@@ -83,6 +84,7 @@ export default function App() {
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/users/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
         <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+        <Route path="/import" element={<ProtectedRoute><Import /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </ToastProvider>

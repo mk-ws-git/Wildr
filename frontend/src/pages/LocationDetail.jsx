@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import api from '../api/client'
 import { useToast } from '../components/Toast'
 import FlagButton from '../components/FlagButton'
+import FacilityIcons from '../components/FacilityIcons'
 
 function formatDate(value) {
   return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
@@ -161,6 +162,9 @@ export default function LocationDetail() {
           </div>
         )}
       </div>
+
+      {/* Facilities */}
+      <FacilityIcons facilities={location.facilities} />
 
       {/* Identify CTA */}
       <Link
