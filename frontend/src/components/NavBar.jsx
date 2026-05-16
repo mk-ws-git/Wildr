@@ -174,9 +174,25 @@ export default function NavBar() {
           </div>
         )}
 
-        {/* Desktop right: bell + user dropdown */}
+        {/* Desktop right: search + bell + user dropdown */}
         {!isMobile && user && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto' }}>
+            {/* Search */}
+            <NavLink
+              to="/search"
+              style={({ isActive }) => ({
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 36, height: 36, borderRadius: '50%',
+                background: isActive ? 'var(--bd-rule-soft)' : 'transparent',
+                color: 'var(--bd-ink-mute)',
+                textDecoration: 'none',
+              })}
+              aria-label="Search"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+            </NavLink>
             {/* Notification bell */}
             <div style={{ position: 'relative' }} ref={bellRef}>
               <button
@@ -314,6 +330,7 @@ export default function NavBar() {
           {user && (
             <>
               <div style={{ borderTop: '1px solid var(--bd-rule)', margin: '0.5rem 0 0.25rem' }} />
+              <Link to="/search" style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', textDecoration: 'none', padding: '0.625rem 0', display: 'block' }}>Search</Link>
               <Link to="/profile" style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', textDecoration: 'none', padding: '0.625rem 0', display: 'block' }}>Profile</Link>
               <Link to="/settings" style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', textDecoration: 'none', padding: '0.625rem 0', display: 'block' }}>Settings</Link>
               {unreadCount > 0 && (

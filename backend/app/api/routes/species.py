@@ -30,6 +30,7 @@ async def list_species(
     rarity: str | None = Query(None),
     conservation_status: str | None = Query(None),
     search: str | None = Query(None),
+    limit: int | None = Query(None, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -46,6 +47,8 @@ async def list_species(
             Species.common_name.ilike(term),
             Species.scientific_name.ilike(term),
         ))
+    if limit:
+        q = q.limit(limit)
     rows = (await db.execute(q)).scalars().all()
     saved_ids, seen_ids = await _saved_seen_sets(db, current_user.id)
     return [
