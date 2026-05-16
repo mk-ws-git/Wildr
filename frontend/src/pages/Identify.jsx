@@ -69,9 +69,12 @@ function LocationPicker({ locationId, setLocationId }) {
 // ── Full-screen editorial result ───────────────────────────────────────────
 
 function ResultCard({ result, onReset }) {
-  const { species, score, uncertain, suggestions, show_endangered_banner, photo_url } = result
+  const { species, score, confidence_tier: tierFromApi, suggestions, show_endangered_banner, photo_url } = result
   const showToast = useToast()
   const [lifeListState, setLifeListState] = useState('prompt') // prompt | added | skipped
+
+  // Derive tier from score if backend didn't send it (audio path)
+  const confidence_tier = tierFromApi ?? (score >= 0.85 ? 'high' : score >= 0.50 ? 'medium' : 'low')
 
   const addToLifeList = async () => {
     try {
@@ -84,134 +87,106 @@ function ResultCard({ result, onReset }) {
   }
 
   return (
-    <div
-      className="relative overflow-hidden"
-      style={{ borderRadius: '24px', minHeight: '72vh' }}
-    >
-      {/* Full background */}
-      {photo_url ? (
-        <img
-          src={photo_url}
-          alt={species.common_name}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
-        <div
-          className="absolute inset-0"
-          style={{ background: 'linear-gradient(135deg, var(--bd-moss-deep), var(--bd-moss))' }}
-        />
-      )}
+    <div className="relative overflow-hidden" style={{ borderRadius: '24px', minHeight: '72vh' }}>
+      {/* Background */}
+      {photo_url
+        ? <img src={photo_url} alt={species.common_name} className="absolute inset-0 w-full h-full object-cover" />
+        : <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--bd-moss-deep), var(--bd-moss))' }} />
+      }
+      <div className="absolute inset-0"
+        style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.10) 70%)' }} />
 
-      {/* Gradient overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.10) 70%)',
-        }}
-      />
-
-      {/* Top notifications */}
+      {/* Top banners */}
       <div className="absolute top-4 left-4 right-4 flex flex-col gap-2 z-10">
-        {!uncertain && lifeListState === 'prompt' && (
-          <div
-            className="flex items-center justify-between gap-2 px-3 py-2 rounded-2xl text-sm text-white"
-            style={{ background: 'rgba(14,40,28,0.72)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)' }}
-          >
+        {confidence_tier === 'high' && lifeListState === 'prompt' && (
+          <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-2xl text-sm text-white"
+            style={{ background: 'rgba(14,40,28,0.72)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)' }}>
             <span style={{ color: 'rgba(255,255,255,0.85)' }}>Add to life list?</span>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={addToLifeList}
-                style={{ background: '#8bba2e', color: '#0f2a1c', border: 'none', borderRadius: '999px', padding: '4px 14px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
-              >
+              <button onClick={addToLifeList}
+                style={{ background: '#8bba2e', color: '#0f2a1c', border: 'none', borderRadius: '999px', padding: '4px 14px', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
                 Yes
               </button>
-              <button
-                onClick={() => setLifeListState('skipped')}
-                style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '999px', padding: '4px 14px', fontSize: '0.8rem', cursor: 'pointer' }}
-              >
+              <button onClick={() => setLifeListState('skipped')}
+                style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '999px', padding: '4px 14px', fontSize: '0.8rem', cursor: 'pointer' }}>
                 Skip
               </button>
             </div>
           </div>
         )}
         {lifeListState === 'added' && (
-          <div
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl text-sm text-white"
-            style={{ background: 'rgba(44,110,90,0.55)', backdropFilter: 'blur(12px)' }}
-          >
+          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl text-sm text-white"
+            style={{ background: 'rgba(44,110,90,0.55)', backdropFilter: 'blur(12px)' }}>
             Added to your life list
           </div>
         )}
         {show_endangered_banner && (
-          <div
-            className="flex items-center gap-2 px-3 py-2 rounded-2xl text-sm"
-            style={{ background: 'rgba(220,38,38,0.35)', backdropFilter: 'blur(12px)', color: '#fecaca' }}
-          >
-            ⚠ {species.conservation_status?.replace(/_/g, ' ')}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-2xl text-sm"
+            style={{ background: 'rgba(220,38,38,0.35)', backdropFilter: 'blur(12px)', color: '#fecaca' }}>
+            {species.conservation_status?.replace(/_/g, ' ')}
           </div>
         )}
       </div>
 
-      {/* Bottom: species info + CTA */}
+      {/* Bottom content */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
 
-        {uncertain ? (
-          /* Low confidence — unknown, offer manual pick */
+        {/* Tier label */}
+        <div className="inline-flex items-center gap-1.5 mb-3 px-3 py-1 rounded-full text-xs font-semibold"
+          style={{ background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.80)' }}>
+          {confidence_tier === 'high' && 'Detected'}
+          {confidence_tier === 'medium' && 'Best match'}
+          {confidence_tier === 'low' && 'Not sure — could be one of these'}
+        </div>
+
+        {confidence_tier === 'low' ? (
+          /* Low — tappable choices */
+          <div className="flex flex-col gap-2 mb-4">
+            {[species, ...(suggestions ?? [])].filter(Boolean).map((s, i) => (
+              <Link key={s.scientific_name ?? i}
+                to={`/species/${s.id ?? species.id}`}
+                className="flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium text-white transition hover:brightness-110"
+                style={{ background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.18)', textDecoration: 'none' }}>
+                <span>{s.common_name}</span>
+                <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem' }}>{s.scientific_name}</span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          /* High or medium — species detail */
           <>
-            <h2 className="text-3xl font-bold text-white leading-tight mb-1" style={{ letterSpacing: '-0.01em' }}>
-              Unknown
-            </h2>
-            <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.55)' }}>
-              We couldn't identify this with confidence. Could it be one of these?
+            <Link to={`/species/${species.id}`} style={{ textDecoration: 'none' }}>
+              <h2 className="text-4xl font-bold text-white leading-tight mb-1 hover:underline underline-offset-4"
+                style={{ letterSpacing: '-0.01em' }}>
+                {species.common_name}
+              </h2>
+            </Link>
+            <p className="text-sm italic mb-3" style={{ color: 'rgba(255,255,255,0.60)' }}>
+              {species.scientific_name}
             </p>
-            {suggestions?.length > 0 && (
-              <div className="flex flex-col gap-2 mb-4">
-                {[result, ...suggestions].filter(Boolean).map((s) => (
-                  <Link
-                    key={s.scientific_name}
-                    to={`/species/${s.id ?? species.id}`}
-                    className="flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium text-white transition hover:brightness-110"
-                    style={{ background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.18)', textDecoration: 'none' }}
-                  >
-                    <span>{s.common_name}</span>
-                    <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem' }}>{s.scientific_name}</span>
-                  </Link>
+            {species.fun_fact && (
+              <p className="text-sm leading-relaxed mb-4" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                {species.fun_fact}
+              </p>
+            )}
+            {confidence_tier === 'medium' && suggestions?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="text-xs self-center" style={{ color: 'rgba(255,255,255,0.45)' }}>Could also be:</span>
+                {suggestions.map((s) => (
+                  <span key={s.scientific_name}
+                    className="text-xs px-2.5 py-1 rounded-full"
+                    style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.18)' }}>
+                    {s.common_name}
+                  </span>
                 ))}
               </div>
             )}
           </>
-        ) : (
-          /* High confidence — show species */
-          <>
-            <Link to={`/species/${species.id}`} style={{ textDecoration: 'none' }}>
-              <h2
-                className="text-4xl font-bold text-white leading-tight mb-1 hover:underline underline-offset-4"
-                style={{ letterSpacing: '-0.01em' }}
-              >
-                {species.common_name}
-              </h2>
-            </Link>
-            <p className="text-sm italic mb-4" style={{ color: 'rgba(255,255,255,0.60)' }}>
-              {species.scientific_name}
-            </p>
-            {species.fun_fact && (
-              <p className="text-sm leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.78)' }}>
-                {species.fun_fact}
-              </p>
-            )}
-          </>
         )}
 
-        <button
-          onClick={onReset}
+        <button onClick={onReset}
           className="w-full py-3.5 rounded-2xl font-semibold text-sm text-white transition hover:brightness-110"
-          style={{
-            background: 'rgba(255,255,255,0.18)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.28)',
-          }}
-        >
+          style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.28)' }}>
           Identify another
         </button>
       </div>

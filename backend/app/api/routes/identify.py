@@ -102,8 +102,16 @@ async def identify_photo_route(
 
     top = results[0]
     score = top["score"]
-    uncertain = score < 0.85
-    suggestions = results[1:4] if uncertain else []
+    if score >= 0.85:
+        confidence_tier = "high"
+        suggestions = []
+    elif score >= 0.50:
+        confidence_tier = "medium"
+        suggestions = results[1:3]
+    else:
+        confidence_tier = "low"
+        suggestions = results[1:3]
+    uncertain = confidence_tier != "high"
 
     # 3. Get or create species
     result = await db.execute(
@@ -166,6 +174,7 @@ async def identify_photo_route(
         "sighting_id": sighting.id,
         "species": SpeciesResponse.model_validate(species),
         "score": score,
+        "confidence_tier": confidence_tier,
         "uncertain": uncertain,
         "suggestions": suggestions,
         "show_endangered_banner": show_endangered_banner,
