@@ -36,7 +36,7 @@ export default function Register() {
   }
 
   return (
-    <AuthShell>
+    <AuthShell page="register">
       {inviteToken && (
         <div style={{
           display: 'flex',

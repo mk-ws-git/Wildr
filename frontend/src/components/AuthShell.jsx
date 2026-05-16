@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
-// Left panel shown on md+ screens
-function NaturePanel() {
-  const [photo, setPhoto] = useState(null)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api'
 
+function usePagePhoto(page) {
+  const [photo, setPhoto] = useState(null)
   useEffect(() => {
-    fetch('/api/photos/auth-panel')
+    fetch(`${API_URL}/photos/auth-panel?page=${encodeURIComponent(page)}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.photo_url) setPhoto(d) })
       .catch(() => {})
-  }, [])
+  }, [page])
+  return photo
+}
 
+function NaturePanel({ photo }) {
   return (
     <div
       style={{
@@ -22,7 +25,6 @@ function NaturePanel() {
         background: '#0f2a1c',
       }}
     >
-      {/* Photo */}
       {photo?.photo_url && (
         <img
           src={photo.photo_url}
@@ -37,7 +39,6 @@ function NaturePanel() {
           }}
         />
       )}
-      {/* Gradient overlay */}
       <div
         style={{
           position: 'absolute',
@@ -46,7 +47,6 @@ function NaturePanel() {
             'linear-gradient(160deg, rgba(7,20,13,0.55) 0%, rgba(26,64,53,0.30) 60%, rgba(7,20,13,0.70) 100%)',
         }}
       />
-      {/* Text content */}
       <div
         style={{
           position: 'absolute',
@@ -58,7 +58,6 @@ function NaturePanel() {
           zIndex: 1,
         }}
       >
-        {/* Wordmark */}
         <div
           style={{
             fontFamily: 'Georgia, serif',
@@ -71,8 +70,6 @@ function NaturePanel() {
         >
           Wildr
         </div>
-
-        {/* Tagline + attribution at bottom */}
         <div>
           <p
             style={{
@@ -86,46 +83,24 @@ function NaturePanel() {
             }}
           >
             Your city is{' '}
-            <em
-              style={{
-                fontFamily: 'Georgia, serif',
-                fontStyle: 'italic',
-                color: '#8bba2e',
-              }}
-            >
+            <em style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', color: '#8bba2e' }}>
               wildr
             </em>{' '}
             than you think.
           </p>
-          <p
-            style={{
-              fontSize: '0.85rem',
-              color: 'rgba(255,255,255,0.62)',
-              margin: '0 0 0.875rem',
-              lineHeight: 1.5,
-            }}
-          >
+          <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.62)', margin: '0 0 0.875rem', lineHeight: 1.5 }}>
             Discover the wildlife living right outside your door.
           </p>
-          {/* Unsplash attribution — required by API guidelines */}
           {photo?.photographer && (
             <p style={{ margin: 0, fontSize: '0.7rem', color: 'rgba(255,255,255,0.40)', lineHeight: 1.4 }}>
               Photo by{' '}
-              <a
-                href={photo.photographer_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'underline' }}
-              >
+              <a href={photo.photographer_url} target="_blank" rel="noopener noreferrer"
+                style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'underline' }}>
                 {photo.photographer}
               </a>{' '}
               on{' '}
-              <a
-                href="https://unsplash.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'underline' }}
-              >
+              <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer"
+                style={{ color: 'rgba(255,255,255,0.55)', textDecoration: 'underline' }}>
                 Unsplash
               </a>
             </p>
@@ -136,15 +111,33 @@ function NaturePanel() {
   )
 }
 
-export default function AuthShell({ children }) {
+export default function AuthShell({ children, page = 'default' }) {
+  const photo = usePagePhoto(page)
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--bd-bg)' }}>
-      {/* Nature panel — desktop only */}
+    <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--bd-bg)', position: 'relative' }}>
+
+      {/* Mobile: full-screen photo background */}
+      {photo?.photo_url && (
+        <div
+          className="md:hidden"
+          style={{ position: 'fixed', inset: 0, zIndex: 0 }}
+        >
+          <img
+            src={photo.photo_url}
+            alt=""
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(7,20,13,0.72)' }} />
+        </div>
+      )}
+
+      {/* Desktop: nature panel */}
       <div
         style={{ width: '52%', flexShrink: 0, display: 'none', position: 'relative' }}
         className="md:block"
       >
-        <NaturePanel />
+        <NaturePanel photo={photo} />
       </div>
 
       {/* Form panel */}
@@ -158,6 +151,8 @@ export default function AuthShell({ children }) {
           padding: '2rem 1.5rem',
           minHeight: '100vh',
           overflowY: 'auto',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {/* Mobile wordmark */}
@@ -168,8 +163,9 @@ export default function AuthShell({ children }) {
               fontFamily: 'Georgia, serif',
               fontSize: '1.8rem',
               fontStyle: 'italic',
-              color: 'var(--bd-ink)',
+              color: photo ? '#ffffff' : 'var(--bd-ink)',
               textDecoration: 'none',
+              textShadow: photo ? '0 1px 8px rgba(0,0,0,0.4)' : 'none',
             }}
           >
             Wildr
@@ -179,15 +175,27 @@ export default function AuthShell({ children }) {
         <div style={{ width: '100%', maxWidth: '380px' }}>
           <div
             style={{
-              background: 'var(--bd-card)',
+              background: photo ? 'rgba(15,26,20,0.82)' : 'var(--bd-card)',
               borderRadius: '1.5rem',
               padding: '2.25rem 2rem 2rem',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.08)',
-              border: '1px solid var(--bd-rule)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.18)',
+              border: photo ? '1px solid rgba(255,255,255,0.10)' : '1px solid var(--bd-rule)',
+              backdropFilter: photo ? 'blur(12px)' : 'none',
             }}
           >
             {children}
           </div>
+          {/* Mobile Unsplash attribution */}
+          {photo?.photographer && (
+            <p className="md:hidden" style={{ margin: '0.75rem 0 0', fontSize: '0.68rem', color: 'rgba(255,255,255,0.35)', textAlign: 'center' }}>
+              Photo by{' '}
+              <a href={photo.photographer_url} target="_blank" rel="noopener noreferrer"
+                style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'underline' }}>
+                {photo.photographer}
+              </a>{' '}
+              on Unsplash
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -307,26 +315,35 @@ export function AuthBtn({ children, loading, variant = 'primary', ...props }) {
     letterSpacing: '0.01em',
   }
   const variants = {
-    primary: {
-      background: 'var(--bd-moss)',
-      color: '#fff',
-      boxShadow: '0 2px 10px rgba(44,110,90,0.25)',
-    },
-    ghost: {
-      background: 'transparent',
-      color: 'var(--bd-ink-mute)',
-      border: '1.5px solid var(--bd-rule)',
-    },
+    primary: { background: 'var(--bd-moss)', color: '#fff', boxShadow: '0 2px 10px rgba(44,110,90,0.25)' },
+    ghost: { background: 'transparent', color: 'var(--bd-ink-mute)', border: '1.5px solid var(--bd-rule)' },
   }
   return (
-    <button
-      disabled={loading}
-      style={{ ...base, ...variants[variant] }}
-      {...props}
-    >
+    <button disabled={loading} style={{ ...base, ...variants[variant] }} {...props}>
       {loading ? '…' : children}
     </button>
   )
+}
+
+export function AuthLinkBtn({ to, children, variant = 'ghost' }) {
+  const base = {
+    display: 'block',
+    width: '100%',
+    padding: '0.8rem',
+    borderRadius: '0.75rem',
+    fontSize: '0.9rem',
+    fontWeight: 700,
+    textAlign: 'center',
+    textDecoration: 'none',
+    letterSpacing: '0.01em',
+    transition: 'opacity 0.15s',
+    boxSizing: 'border-box',
+  }
+  const variants = {
+    primary: { background: 'var(--bd-moss)', color: '#fff', boxShadow: '0 2px 10px rgba(44,110,90,0.25)' },
+    ghost: { background: 'transparent', color: 'var(--bd-ink-mute)', border: '1.5px solid var(--bd-rule)' },
+  }
+  return <Link to={to} style={{ ...base, ...variants[variant] }}>{children}</Link>
 }
 
 export function AuthError({ message }) {

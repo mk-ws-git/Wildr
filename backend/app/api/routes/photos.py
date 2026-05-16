@@ -111,23 +111,34 @@ async def _fetch_unsplash_photo(query: str) -> dict | None:
         return None
 
 
-# One fresh photo per day for the auth panel — no user auth required
+PAGE_QUERIES = {
+    "splash":   "misty forest dawn wildlife",
+    "login":    "bird wildlife nature morning",
+    "register": "wildflower meadow spring nature",
+    "forgot":   "woodland fog morning deer",
+    "reset":    "sunrise nature golden hour",
+}
+
+# Per-page, per-day cache
 _auth_panel_cache: dict = {}
 
 
 @router.get("/auth-panel")
-async def auth_panel_photo():
+async def auth_panel_photo(page: str = "default"):
     global _auth_panel_cache
     today = date.today()
-    if _auth_panel_cache.get("date") == today:
-        return _auth_panel_cache["photo"]
+    cache_key = f"{today}_{page}"
+    if cache_key in _auth_panel_cache:
+        return _auth_panel_cache[cache_key]
 
-    photo = await _fetch_unsplash_photo("nature wildlife forest")
+    query = PAGE_QUERIES.get(page, "nature wildlife forest")
+    seed_idx = abs(hash(page + str(today.toordinal()))) % len(FALLBACK_PHOTOS)
+
+    photo = await _fetch_unsplash_photo(query)
     if not photo:
-        seed = today.toordinal()
-        photo = {**FALLBACK_PHOTOS[seed % len(FALLBACK_PHOTOS)], "source": "unsplash"}
+        photo = {**FALLBACK_PHOTOS[seed_idx], "source": "unsplash"}
 
-    _auth_panel_cache = {"date": today, "photo": photo}
+    _auth_panel_cache[cache_key] = photo
     return photo
 
 

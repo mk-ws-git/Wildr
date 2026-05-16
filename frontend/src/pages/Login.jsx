@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import api from '../api/client'
 import useAuthStore from '../store/authStore'
-import AuthShell, { AuthHeading, AuthField, AuthBtn, AuthError, AuthLinks } from '../components/AuthShell'
+import AuthShell, { AuthHeading, AuthField, AuthBtn, AuthLinkBtn, AuthError } from '../components/AuthShell'
 
 export default function Login() {
   const [form, setForm] = useState({ username: '', password: '' })
@@ -31,7 +31,7 @@ export default function Login() {
   }
 
   return (
-    <AuthShell>
+    <AuthShell page="login">
       <AuthHeading title="Welcome back" subtitle="Log in to continue exploring wildlife" />
       <AuthError message={error} />
       <form onSubmit={handleSubmit}>
@@ -61,14 +61,9 @@ export default function Login() {
         </div>
         <AuthBtn loading={loading}>Log in</AuthBtn>
       </form>
-      <AuthLinks>
-        <span>
-          No account?{' '}
-          <Link to="/register" style={{ color: 'var(--bd-moss)', fontWeight: 600, textDecoration: 'none' }}>
-            Create one
-          </Link>
-        </span>
-      </AuthLinks>
+      <div style={{ marginTop: '0.75rem' }}>
+        <AuthLinkBtn to="/register">Create an account</AuthLinkBtn>
+      </div>
     </AuthShell>
   )
 }

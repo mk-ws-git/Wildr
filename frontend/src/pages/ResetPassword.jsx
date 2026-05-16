@@ -31,7 +31,7 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <AuthShell>
+      <AuthShell page="reset">
         <AuthHeading title="Invalid link" />
         <p style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', marginBottom: '1rem' }}>
           This reset link is missing a token.
@@ -45,7 +45,7 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <AuthShell>
+      <AuthShell page="reset">
         <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
           <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#f0faf0', display: 'grid', placeItems: 'center', margin: '0 auto 1.25rem' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--bd-moss)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -60,7 +60,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <AuthShell>
+    <AuthShell page="reset">
       <AuthHeading title="Set new password" subtitle="Choose a password at least 8 characters long" />
       <AuthError message={error} />
       <form onSubmit={handleSubmit}>

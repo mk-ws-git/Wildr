@@ -26,7 +26,7 @@ export default function ForgotPassword() {
 
   if (resetToken) {
     return (
-      <AuthShell>
+      <AuthShell page="forgot">
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--bd-bg-soft)', display: 'grid', placeItems: 'center', margin: '0 auto 1.25rem' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--bd-moss)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -64,7 +64,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <AuthShell>
+    <AuthShell page="forgot">
       <AuthHeading
         title="Reset your password"
         subtitle="Enter your email and we'll send a reset link"

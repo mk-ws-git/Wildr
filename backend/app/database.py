@@ -9,7 +9,7 @@ if "supabase.co" in url or "pooler.supabase.com" in url:
 if "pooler.supabase.com" in url:
     connect_args["statement_cache_size"] = 0
 
-engine = create_async_engine(url, echo=False, connect_args=connect_args)
+engine = create_async_engine(url, echo=False, connect_args=connect_args, pool_pre_ping=True)
 
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
