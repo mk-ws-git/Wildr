@@ -7,8 +7,7 @@ url = settings.DATABASE_URL
 if "supabase.co" in url or "pooler.supabase.com" in url:
     connect_args["ssl"] = "require"
 if "pooler.supabase.com" in url:
-    connect_args["prepared_statement_cache_size"] = 0
-    connect_args["no_prepared_statements"] = True
+    connect_args["statement_cache_size"] = 0
 
 engine = create_async_engine(url, echo=False, connect_args=connect_args)
 
