@@ -10,7 +10,7 @@ async def identify_photo(image_bytes: bytes) -> list[dict]:
         response = await client.post(
             INAT_VISION_URL,
             files={"image": ("photo.jpg", image_bytes, "image/jpeg")},
-            headers={"Authorization": settings.INAT_API_TOKEN},
+            headers={"Authorization": f"Bearer {settings.INAT_API_TOKEN}"},
         )
         response.raise_for_status()
         data = response.json()

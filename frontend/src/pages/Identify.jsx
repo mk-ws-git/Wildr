@@ -5,13 +5,21 @@ import { useToast } from '../components/Toast'
 
 function useGPS() {
   const [coords, setCoords] = useState(null)
+  const [gpsStatus, setGpsStatus] = useState('waiting') // waiting | ready | unavailable
   useEffect(() => {
-    navigator.geolocation?.getCurrentPosition(
-      (p) => setCoords({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => {}
+    if (!navigator.geolocation) { setGpsStatus('unavailable'); return }
+    const timer = setTimeout(() => setGpsStatus(s => s === 'waiting' ? 'unavailable' : s), 10000)
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        clearTimeout(timer)
+        setCoords({ lat: p.coords.latitude, lng: p.coords.longitude })
+        setGpsStatus('ready')
+      },
+      () => { clearTimeout(timer); setGpsStatus('unavailable') }
     )
+    return () => clearTimeout(timer)
   }, [])
-  return coords
+  return { coords, gpsStatus }
 }
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
@@ -188,7 +196,7 @@ function ResultCard({ result, onReset }) {
 
 // ── Photo tab ──────────────────────────────────────────────────────────────
 
-function PhotoTab({ coords, geoSuggestion }) {
+function PhotoTab({ coords, gpsStatus, geoSuggestion }) {
   const [mode, setMode] = useState(null)
   const [imageBlob, setImageBlob] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
@@ -365,15 +373,26 @@ function PhotoTab({ coords, geoSuggestion }) {
               Retake
             </button>
           </div>
-          {coords && (
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs"
-              style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}
-            >
+          {gpsStatus === 'ready' && coords && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--bd-moss)', flexShrink: 0 }}>
                 <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 14-8 14S4 15.25 4 10a8 8 0 0 1 8-8z"/>
               </svg>
-              GPS detected · {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+              GPS ready · {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+            </div>
+          )}
+          {gpsStatus === 'waiting' && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}>
+              <div className="w-3 h-3 rounded-full border-2 border-current opacity-50 animate-pulse" style={{ color: 'var(--bd-moss)', flexShrink: 0 }} />
+              Acquiring GPS…
+            </div>
+          )}
+          {gpsStatus === 'unavailable' && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--bd-terra)', flexShrink: 0 }}>
+                <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 14-8 14S4 15.25 4 10a8 8 0 0 1 8-8z"/>
+              </svg>
+              No GPS — sighting won't appear on map
             </div>
           )}
           <LocationPicker locationId={locationId} setLocationId={setLocationId} />
@@ -452,9 +471,12 @@ function LiveWaveform({ analyserRef }) {
   )
 }
 
-function AudioTab({ coords, geoSuggestion }) {
+const LOW_CONFIDENCE_THRESHOLD = 0.55
+
+function AudioTab({ coords, gpsStatus, geoSuggestion }) {
   const [phase, setPhase] = useState('idle')
   const [detections, setDetections] = useState([])
+  const [selectedDetection, setSelectedDetection] = useState(null)
   const [locationId, setLocationId] = useState(null)
   const [placeName, setPlaceName] = useState('')
   const [userEditedPlace, setUserEditedPlace] = useState(false)
@@ -544,8 +566,9 @@ function AudioTab({ coords, geoSuggestion }) {
     setPhase('review')
   }
 
-  const saveTop = async () => {
-    if (!detections.length) return
+  const saveTop = async (overrideDetection = null) => {
+    const det = overrideDetection || selectedDetection || (detections.length ? detections[0] : null)
+    if (!det) return
     setSaving(true); setError(null)
     const blob = new Blob(allChunksRef.current, { type: mimeType })
     const form = new FormData()
@@ -553,6 +576,8 @@ function AudioTab({ coords, geoSuggestion }) {
     if (coords) { form.append('lat', coords.lat); form.append('lng', coords.lng) }
     if (locationId) form.append('location_id', locationId)
     if (placeName.trim()) form.append('place_name', placeName.trim())
+    // Pass user-confirmed species so backend honours the selection
+    if (det.scientific_name) form.append('selected_scientific_name', det.scientific_name)
     try {
       const { data } = await api.post('/identify/audio', form)
       setResult(data)
@@ -567,7 +592,7 @@ function AudioTab({ coords, geoSuggestion }) {
     clearInterval(timerRef.current)
     audioCtxRef.current?.close()
     analyserRef.current = null
-    setPhase('idle'); setDetections([]); setResult(null)
+    setPhase('idle'); setDetections([]); setSelectedDetection(null); setResult(null)
     setError(null); setLocationId(null); setPlaceName('')
     setElapsed(0); setUserEditedPlace(false)
     chunksRef.current = []; allChunksRef.current = []
@@ -636,31 +661,20 @@ function AudioTab({ coords, geoSuggestion }) {
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      {/* Live detections */}
-      {detections.length > 0 && (
+      {/* Live detections — species names only, no confidence scores */}
+      {detections.length > 0 && phase === 'recording' && (
         <div className="w-full space-y-2">
           <p className="text-xs font-semibold uppercase tracking-widest px-1" style={{ color: 'var(--bd-ink-mute)' }}>
-            {phase === 'recording' ? 'Detected so far' : 'Detected'}
+            Detected so far
           </p>
-          {detections.map((d) => (
+          {detections.slice(0, 3).map((d) => (
             <div
               key={d.scientific_name}
-              className="flex items-center justify-between rounded-2xl px-4 py-3"
+              className="rounded-2xl px-4 py-3"
               style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}
             >
-              <div>
-                <p className="text-sm font-semibold" style={{ color: 'var(--bd-ink)' }}>{d.common_name}</p>
-                <p className="text-xs italic" style={{ color: 'var(--bd-ink-mute)' }}>{d.scientific_name}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-bold" style={{ color: 'var(--bd-moss)' }}>{Math.round(d.confidence * 100)}%</p>
-                <div className="w-16 h-1 rounded-full mt-1" style={{ backgroundColor: 'var(--bd-rule)' }}>
-                  <div
-                    className="h-1 rounded-full"
-                    style={{ width: `${Math.round(d.confidence * 100)}%`, backgroundColor: 'var(--bd-moss)' }}
-                  />
-                </div>
-              </div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--bd-ink)' }}>{d.common_name}</p>
+              <p className="text-xs italic" style={{ color: 'var(--bd-ink-mute)' }}>{d.scientific_name}</p>
             </div>
           ))}
         </div>
@@ -668,15 +682,26 @@ function AudioTab({ coords, geoSuggestion }) {
 
       {phase === 'review' && detections.length > 0 && (
         <div className="w-full space-y-3">
-          {coords && (
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs"
-              style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}
-            >
+          {gpsStatus === 'ready' && coords && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--bd-moss)', flexShrink: 0 }}>
                 <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 14-8 14S4 15.25 4 10a8 8 0 0 1 8-8z"/>
               </svg>
-              GPS detected · {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+              GPS ready · {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+            </div>
+          )}
+          {gpsStatus === 'waiting' && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}>
+              <div className="w-3 h-3 rounded-full border-2 border-current opacity-50 animate-pulse" style={{ color: 'var(--bd-moss)', flexShrink: 0 }} />
+              Acquiring GPS…
+            </div>
+          )}
+          {gpsStatus === 'unavailable' && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs" style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--bd-terra)', flexShrink: 0 }}>
+                <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 14-8 14S4 15.25 4 10a8 8 0 0 1 8-8z"/>
+              </svg>
+              No GPS — sighting won't appear on map
             </div>
           )}
           <LocationPicker locationId={locationId} setLocationId={setLocationId} />
@@ -733,7 +758,7 @@ function AudioTab({ coords, geoSuggestion }) {
 export default function Identify() {
   const { pathname } = useLocation()
   const [tab, setTab] = useState(pathname === '/identify/audio' ? 'audio' : 'photo')
-  const coords = useGPS()
+  const { coords, gpsStatus } = useGPS()
   const geoSuggestion = useReverseGeocode(coords)
 
   return (
@@ -765,8 +790,8 @@ export default function Identify() {
       {/* Tab content */}
       <div className="pb-8">
         {tab === 'photo'
-          ? <PhotoTab coords={coords} geoSuggestion={geoSuggestion} />
-          : <AudioTab coords={coords} geoSuggestion={geoSuggestion} />
+          ? <PhotoTab coords={coords} gpsStatus={gpsStatus} geoSuggestion={geoSuggestion} />
+          : <AudioTab coords={coords} gpsStatus={gpsStatus} geoSuggestion={geoSuggestion} />
         }
       </div>
     </div>

@@ -175,6 +175,7 @@ async def identify_audio_route(
     lng: float | None = Form(None),
     location_id: int | None = Form(None),
     place_name: str | None = Form(None),
+    selected_scientific_name: str | None = Form(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -200,7 +201,15 @@ async def identify_audio_route(
             "waveform_data": waveform_data,
         }
 
+    # If the user manually confirmed a species (low-confidence picker), use that
     top = detections[0]
+    if selected_scientific_name:
+        matched = next(
+            (d for d in detections if d["scientific_name"] == selected_scientific_name),
+            None,
+        )
+        if matched:
+            top = matched
 
     # 4. Get or create species
     result = await db.execute(

@@ -353,7 +353,32 @@ function EditTab({ user, setUser, onBack }) {
     setSavingProfile(true)
     setProfileMsg(null)
     try {
-      const { data } = await api.patch('/users/me', { bio: bio || null, location_name: locationName || null })
+      let location_lat = null
+      let location_lng = null
+
+      if (locationName) {
+        try {
+          const token = import.meta.env.VITE_MAPBOX_TOKEN
+          const res = await fetch(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(locationName)}.json?access_token=${token}&limit=1`
+          )
+          const geo = await res.json()
+          if (geo.features?.length) {
+            const [lng, lat] = geo.features[0].center
+            location_lat = lat
+            location_lng = lng
+          }
+        } catch {
+          // geocode failed — still save name without coords
+        }
+      }
+
+      const { data } = await api.patch('/users/me', {
+        bio: bio || null,
+        location_name: locationName || null,
+        location_lat,
+        location_lng,
+      })
       storeSetUser(data)
       setUser(data)
       setProfileMsg({ ok: true, text: 'Profile saved.' })
@@ -472,6 +497,82 @@ function EditTab({ user, setUser, onBack }) {
   )
 }
 
+// ── Permissions card ─────────────────────────────────────────────────────
+
+function PermissionsCard() {
+  const [perms, setPerms] = useState({ camera: 'unknown', microphone: 'unknown', geolocation: 'unknown' })
+
+  const check = async () => {
+    const names = ['camera', 'microphone', 'geolocation']
+    const results = await Promise.all(
+      names.map(name =>
+        navigator.permissions?.query({ name }).then(r => [name, r.state]).catch(() => [name, 'unknown'])
+      )
+    )
+    setPerms(Object.fromEntries(results))
+  }
+
+  useEffect(() => { check() }, [])
+
+  const request = async (type) => {
+    try {
+      if (type === 'geolocation') {
+        navigator.geolocation.getCurrentPosition(() => check(), () => check())
+      } else {
+        const constraints = type === 'camera' ? { video: true } : { audio: true }
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        stream.getTracks().forEach(t => t.stop())
+        check()
+      }
+    } catch { check() }
+  }
+
+  const rows = [
+    { key: 'camera', label: 'Camera', desc: 'Required for photo identification' },
+    { key: 'microphone', label: 'Microphone', desc: 'Required for sound identification' },
+    { key: 'geolocation', label: 'Location', desc: 'Required for sightings to appear on map' },
+  ]
+
+  const statusColor = s => s === 'granted' ? 'var(--bd-moss)' : s === 'denied' ? 'var(--bd-terra)' : 'var(--bd-ink-mute)'
+
+  return (
+    <div style={{ ...card, padding: '1.5rem' }}>
+      <h2 style={{ fontSize: '1rem', fontWeight: 600, ...ink, marginBottom: '0.25rem' }}>Device permissions</h2>
+      <p style={{ ...muted, marginBottom: '1.25rem' }}>Manage what this app can access on your device.</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {rows.map(({ key, label, desc }) => {
+          const state = perms[key]
+          return (
+            <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: '0.875rem', fontWeight: 500, ...ink, margin: 0 }}>{label}</p>
+                <p style={{ ...muted, margin: 0 }}>{desc}</p>
+              </div>
+              {state === 'granted' ? (
+                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: statusColor(state), whiteSpace: 'nowrap' }}>Allowed</span>
+              ) : state === 'denied' ? (
+                <span style={{ fontSize: '0.78rem', color: statusColor(state), whiteSpace: 'nowrap' }}>Blocked in browser</span>
+              ) : (
+                <button
+                  onClick={() => request(key)}
+                  style={{ fontSize: '0.78rem', fontWeight: 600, padding: '0.3rem 0.85rem', borderRadius: '999px', border: '1px solid var(--bd-rule)', background: 'var(--bd-bg)', color: 'var(--bd-ink)', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  Allow
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {Object.values(perms).some(s => s === 'denied') && (
+        <p style={{ ...muted, marginTop: '1rem', padding: '0.65rem 0.85rem', borderRadius: '0.75rem', background: 'var(--bd-bg)', border: '1px solid var(--bd-rule)' }}>
+          Blocked permissions must be re-enabled in your browser's site settings.
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ── Tab: Preferences ─────────────────────────────────────────────────────
 
 function PrefsTab({ user, setUser, onBack }) {
@@ -506,8 +607,11 @@ function PrefsTab({ user, setUser, onBack }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--bd-ink-mute)', fontSize: '0.875rem', padding: 0 }}>
           ← Back to profile
+
         </button>
       </div>
+
+      <PermissionsCard />
 
       <div style={{ ...card, padding: '1.5rem' }}>
         <h2 style={{ fontSize: '1rem', fontWeight: 600, ...ink, marginBottom: '0.25rem' }}>Wildr community</h2>
