@@ -14,6 +14,26 @@ function useGPS() {
   return coords
 }
 
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
+
+function useReverseGeocode(coords) {
+  const [suggestion, setSuggestion] = useState(null)
+  useEffect(() => {
+    if (!coords || !MAPBOX_TOKEN) return
+    const { lat, lng } = coords
+    fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&types=poi,neighborhood,locality,place&limit=1`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        const name = data.features?.[0]?.place_name
+        if (name) setSuggestion(name.split(',')[0].trim())
+      })
+      .catch(() => {})
+  }, [coords])
+  return suggestion
+}
+
 function LocationPicker({ locationId, setLocationId }) {
   const [locations, setLocations] = useState([])
   useEffect(() => {
@@ -168,15 +188,23 @@ function ResultCard({ result, onReset }) {
 
 // ── Photo tab ──────────────────────────────────────────────────────────────
 
-function PhotoTab({ coords }) {
+function PhotoTab({ coords, geoSuggestion }) {
   const [mode, setMode] = useState(null)
   const [imageBlob, setImageBlob] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
   const [locationId, setLocationId] = useState(null)
   const [placeName, setPlaceName] = useState('')
+  const [userEditedPlace, setUserEditedPlace] = useState(false)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+
+  // Auto-fill place name from reverse geocode if user hasn't typed anything
+  useEffect(() => {
+    if (geoSuggestion && !userEditedPlace && !placeName) {
+      setPlaceName(geoSuggestion)
+    }
+  }, [geoSuggestion])
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const canvasRef = useRef(null)
@@ -248,6 +276,7 @@ function PhotoTab({ coords }) {
     stopCamera()
     setMode(null); setImageBlob(null); setPreviewUrl(null)
     setResult(null); setError(null); setLocationId(null); setPlaceName('')
+    setUserEditedPlace(false)
   }
 
   if (result) return <ResultCard result={result} onReset={reset} />
@@ -336,15 +365,33 @@ function PhotoTab({ coords }) {
               Retake
             </button>
           </div>
+          {coords && (
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs"
+              style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--bd-moss)', flexShrink: 0 }}>
+                <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 14-8 14S4 15.25 4 10a8 8 0 0 1 8-8z"/>
+              </svg>
+              GPS detected · {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+            </div>
+          )}
           <LocationPicker locationId={locationId} setLocationId={setLocationId} />
-          <input
-            type="text"
-            value={placeName}
-            onChange={(e) => setPlaceName(e.target.value)}
-            placeholder="Place nickname — e.g. Back garden"
-            className="w-full rounded-2xl px-3 py-2.5 text-sm"
-            style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink)' }}
-          />
+          <div>
+            <input
+              type="text"
+              value={placeName}
+              onChange={(e) => { setPlaceName(e.target.value); setUserEditedPlace(true) }}
+              placeholder="Place nickname — e.g. Back garden"
+              className="w-full rounded-2xl px-3 py-2.5 text-sm"
+              style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink)' }}
+            />
+            {geoSuggestion && !userEditedPlace && (
+              <p className="text-xs mt-1 px-1" style={{ color: 'var(--bd-ink-mute)' }}>
+                Auto-filled from GPS · tap to change
+              </p>
+            )}
+          </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             onClick={submit}
@@ -362,14 +409,21 @@ function PhotoTab({ coords }) {
 
 // ── Audio tab ──────────────────────────────────────────────────────────────
 
-function AudioTab({ coords }) {
+function AudioTab({ coords, geoSuggestion }) {
   const [phase, setPhase] = useState('idle')
   const [detections, setDetections] = useState([])
   const [locationId, setLocationId] = useState(null)
   const [placeName, setPlaceName] = useState('')
+  const [userEditedPlace, setUserEditedPlace] = useState(false)
   const [saving, setSaving] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (geoSuggestion && !userEditedPlace && !placeName) {
+      setPlaceName(geoSuggestion)
+    }
+  }, [geoSuggestion])
 
   const mediaRecorderRef = useRef(null)
   const chunksRef = useRef([])
@@ -540,15 +594,33 @@ function AudioTab({ coords }) {
 
       {phase === 'review' && detections.length > 0 && (
         <div className="w-full space-y-3">
+          {coords && (
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-2xl text-xs"
+              style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink-soft)' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--bd-moss)', flexShrink: 0 }}>
+                <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 14-8 14S4 15.25 4 10a8 8 0 0 1 8-8z"/>
+              </svg>
+              GPS detected · {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}
+            </div>
+          )}
           <LocationPicker locationId={locationId} setLocationId={setLocationId} />
-          <input
-            type="text"
-            value={placeName}
-            onChange={(e) => setPlaceName(e.target.value)}
-            placeholder="Place nickname — e.g. Back garden"
-            className="w-full rounded-2xl px-3 py-2.5 text-sm"
-            style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink)' }}
-          />
+          <div>
+            <input
+              type="text"
+              value={placeName}
+              onChange={(e) => { setPlaceName(e.target.value); setUserEditedPlace(true) }}
+              placeholder="Place nickname — e.g. Back garden"
+              className="w-full rounded-2xl px-3 py-2.5 text-sm"
+              style={{ backgroundColor: 'var(--bd-card)', border: '1px solid var(--bd-rule)', color: 'var(--bd-ink)' }}
+            />
+            {geoSuggestion && !userEditedPlace && (
+              <p className="text-xs mt-1 px-1" style={{ color: 'var(--bd-ink-mute)' }}>
+                Auto-filled from GPS · tap to change
+              </p>
+            )}
+          </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             onClick={saveTop}
@@ -588,6 +660,7 @@ export default function Identify() {
   const { pathname } = useLocation()
   const [tab, setTab] = useState(pathname === '/identify/audio' ? 'audio' : 'photo')
   const coords = useGPS()
+  const geoSuggestion = useReverseGeocode(coords)
 
   return (
     <div style={{ minHeight: 'calc(100vh - 64px)', maxWidth: 640, margin: '0 auto', padding: '0 1rem' }}>
@@ -617,7 +690,10 @@ export default function Identify() {
 
       {/* Tab content */}
       <div className="pb-8">
-        {tab === 'photo' ? <PhotoTab coords={coords} /> : <AudioTab coords={coords} />}
+        {tab === 'photo'
+          ? <PhotoTab coords={coords} geoSuggestion={geoSuggestion} />
+          : <AudioTab coords={coords} geoSuggestion={geoSuggestion} />
+        }
       </div>
     </div>
   )

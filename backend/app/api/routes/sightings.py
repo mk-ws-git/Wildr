@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 from app.models.sighting import Sighting
 from app.models.species import Species
+from app.models.user_species import UserSpecies
 from app.schemas.sighting import SightingCreate, SightingResponse, SightingUpdate, SightingWithSpecies
 from app.core.deps import get_current_user
 from app.models.user import User
@@ -36,6 +37,22 @@ async def create_sighting(
         weather_data=weather,
     )
     db.add(sighting)
+    await db.flush()
+
+    # Add species to the user's life list
+    existing_us = (await db.execute(
+        select(UserSpecies).where(
+            UserSpecies.user_id == current_user.id,
+            UserSpecies.species_id == body.species_id,
+        )
+    )).scalar_one_or_none()
+    if existing_us:
+        if not existing_us.added_to_list:
+            existing_us.added_to_list = True
+            db.add(existing_us)
+    else:
+        db.add(UserSpecies(user_id=current_user.id, species_id=body.species_id, added_to_list=True))
+
     await db.commit()
     await db.refresh(sighting)
     return sighting

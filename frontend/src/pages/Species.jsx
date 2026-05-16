@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../api/client'
+
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 
 const KINGDOMS = [
   { value: '', label: 'All kingdoms' },
@@ -153,7 +155,190 @@ function SkeletonCard() {
   )
 }
 
-export default function Species() {
+// ── By Area tab ────────────────────────────────────────────────────────────
+
+function PlaceAutocomplete({ onSelect }) {
+  const [query, setQuery] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const debounceRef = useRef(null)
+
+  const search = (q) => {
+    if (!q || q.length < 2 || !MAPBOX_TOKEN) { setSuggestions([]); return }
+    fetch(
+      `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(q)}.json?access_token=${MAPBOX_TOKEN}&types=place,locality,neighborhood&limit=5`
+    )
+      .then(r => r.json())
+      .then(data => setSuggestions(data.features || []))
+      .catch(() => {})
+  }
+
+  const handleChange = (e) => {
+    const val = e.target.value
+    setQuery(val)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => search(val), 300)
+  }
+
+  const pick = (f) => {
+    setQuery(f.place_name)
+    setSuggestions([])
+    const [lng, lat] = f.geometry.coordinates
+    onSelect({ lat, lng, name: f.place_name.split(',')[0].trim() })
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--bd-ink-mute)', pointerEvents: 'none' }}>
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          type="search"
+          value={query}
+          onChange={handleChange}
+          placeholder="Search any city, town or area…"
+          style={{ ...filterInput, width: '100%', boxSizing: 'border-box', paddingLeft: 34 }}
+        />
+      </div>
+      {suggestions.length > 0 && (
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, background: 'var(--bd-card)', border: '1px solid var(--bd-rule)', borderRadius: '0.5rem', marginTop: 4, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+          {suggestions.map(f => (
+            <button
+              key={f.id}
+              onClick={() => pick(f)}
+              style={{ width: '100%', textAlign: 'left', padding: '0.5rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--bd-ink)', borderBottom: '1px solid var(--bd-rule-soft)' }}
+            >
+              <span style={{ fontWeight: 600 }}>{f.text}</span>
+              <span style={{ color: 'var(--bd-ink-mute)', marginLeft: 6 }}>{f.place_name.split(',').slice(1).join(',').trim()}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const RADIUS_OPTIONS = [
+  { value: 1000, label: '1 km' },
+  { value: 5000, label: '5 km' },
+  { value: 10000, label: '10 km' },
+  { value: 25000, label: '25 km' },
+  { value: 50000, label: '50 km' },
+]
+
+function ByAreaTab() {
+  const [areaCoords, setAreaCoords] = useState(null)
+  const [areaName, setAreaName] = useState('')
+  const [radius, setRadius] = useState(5000)
+  const [species, setSpecies] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [searched, setSearched] = useState(false)
+  const [locating, setLocating] = useState(false)
+
+  const handleSelect = ({ lat, lng, name }) => {
+    setAreaCoords({ lat, lng })
+    setAreaName(name)
+  }
+
+  const useMyLocation = () => {
+    setLocating(true)
+    navigator.geolocation?.getCurrentPosition(
+      (p) => {
+        setAreaCoords({ lat: p.coords.latitude, lng: p.coords.longitude })
+        setAreaName('My location')
+        setLocating(false)
+      },
+      () => setLocating(false)
+    )
+  }
+
+  const fetchNearby = () => {
+    if (!areaCoords) return
+    setLoading(true)
+    setSearched(true)
+    api.get('/species/nearby', { params: { lat: areaCoords.lat, lng: areaCoords.lng, radius_m: radius } })
+      .then(({ data }) => setSpecies(data))
+      .catch(() => setSpecies([]))
+      .finally(() => setLoading(false))
+  }
+
+  const toggleSave = async (s) => {
+    const prev = s.saved
+    setSpecies(list => list.map(x => x.id === s.id ? { ...x, saved: !prev } : x))
+    try {
+      if (prev) await api.delete(`/species/${s.id}/save`)
+      else await api.post(`/species/${s.id}/save`)
+    } catch {
+      setSpecies(list => list.map(x => x.id === s.id ? { ...x, saved: prev } : x))
+    }
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
+        <PlaceAutocomplete onSelect={handleSelect} />
+
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            onClick={useMyLocation}
+            disabled={locating}
+            style={{ ...filterInput, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', background: areaName === 'My location' ? 'var(--bd-moss)' : 'var(--bd-bg)', color: areaName === 'My location' ? '#fff' : 'var(--bd-ink)', border: '1px solid var(--bd-rule)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 14-8 14S4 15.25 4 10a8 8 0 0 1 8-8z"/>
+            </svg>
+            {locating ? 'Locating…' : 'Use my location'}
+          </button>
+
+          <select value={radius} onChange={e => setRadius(Number(e.target.value))} style={{ ...filterInput, flexShrink: 0 }}>
+            {RADIUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+
+          <button
+            onClick={fetchNearby}
+            disabled={!areaCoords || loading}
+            style={{ ...filterInput, background: 'var(--bd-moss)', color: '#fff', border: 'none', cursor: areaCoords ? 'pointer' : 'not-allowed', opacity: areaCoords ? 1 : 0.5, fontWeight: 600 }}
+          >
+            {loading ? 'Searching…' : 'Search'}
+          </button>
+        </div>
+
+        {areaCoords && areaName && (
+          <p style={{ fontSize: '0.8rem', color: 'var(--bd-ink-mute)', margin: 0 }}>
+            Showing species within {RADIUS_OPTIONS.find(o => o.value === radius)?.label} of <strong style={{ color: 'var(--bd-ink)' }}>{areaName}</strong>
+          </p>
+        )}
+      </div>
+
+      {loading ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem' }}>
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      ) : searched && species.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)' }}>No sightings recorded in this area yet.</p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--bd-ink-mute)', marginTop: 4 }}>Try a larger radius or a different location.</p>
+        </div>
+      ) : !searched ? (
+        <div style={{ textAlign: 'center', padding: '3rem 0' }}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--bd-rule)', margin: '0 auto 0.75rem' }}>
+            <circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.25-8 14-8 14S4 15.25 4 10a8 8 0 0 1 8-8z"/>
+          </svg>
+          <p style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)' }}>Search a location to see what lives there</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem' }}>
+          {species.map(s => <SpeciesCard key={s.id} species={s} onToggleSave={toggleSave} />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Browse tab ──────────────────────────────────────────────────────────────
+
+function BrowseTab() {
   const [species, setSpecies] = useState([])
   const [loading, setLoading] = useState(true)
   const [kingdom, setKingdom] = useState('')
@@ -194,16 +379,7 @@ export default function Species() {
   const hasFilter = !!(kingdom || rarity || conservation || search)
 
   return (
-    <div style={{ maxWidth: 1152, margin: '0 auto', padding: '1.5rem 1rem' }}>
-      <div style={{ marginBottom: '1.25rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--bd-ink)', margin: 0 }}>Species</h1>
-        {!loading && (
-          <p style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', margin: '0.25rem 0 0' }}>
-            {species.length} species{hasFilter ? ' matching filters' : ''}
-          </p>
-        )}
-      </div>
-
+    <div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
         <input
           type="search"
@@ -231,6 +407,12 @@ export default function Species() {
         )}
       </div>
 
+      {!loading && (
+        <p style={{ fontSize: '0.875rem', color: 'var(--bd-ink-mute)', marginBottom: '1rem' }}>
+          {species.length} species{hasFilter ? ' matching filters' : ''}
+        </p>
+      )}
+
       {loading ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem' }}>
           {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -244,6 +426,43 @@ export default function Species() {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+export default function Species() {
+  const [tab, setTab] = useState('browse')
+
+  return (
+    <div style={{ maxWidth: 1152, margin: '0 auto', padding: '1.5rem 1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--bd-ink)', margin: 0 }}>Species</h1>
+        <div
+          style={{ display: 'flex', padding: 4, borderRadius: 999, gap: 4, background: 'var(--bd-card)', border: '1px solid var(--bd-rule)' }}
+        >
+          {[{ key: 'browse', label: 'Browse' }, { key: 'area', label: 'By Area' }].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              style={{
+                padding: '0.375rem 1rem',
+                borderRadius: 999,
+                border: 'none',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                background: tab === key ? 'var(--bd-ink)' : 'transparent',
+                color: tab === key ? '#fff' : 'var(--bd-ink-soft)',
+                transition: 'background 0.15s',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {tab === 'browse' ? <BrowseTab /> : <ByAreaTab />}
     </div>
   )
 }

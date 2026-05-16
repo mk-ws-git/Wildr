@@ -85,6 +85,53 @@ async def saved_species(
     ]
 
 
+@router.get("/nearby", response_model=list[SpeciesListItem])
+async def nearby_species(
+    lat: float = Query(...),
+    lng: float = Query(...),
+    radius_m: int = Query(5000, ge=100, le=50000),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Unique species with at least one public sighting within radius_m metres."""
+    from sqlalchemy import text as sa_text
+    rows = (await db.execute(
+        sa_text("""
+            SELECT DISTINCT s.id
+            FROM species s
+            JOIN sightings sg ON sg.species_id = s.id
+            WHERE sg.is_private = FALSE
+              AND sg.location IS NOT NULL
+              AND ST_DWithin(
+                    sg.location::geography,
+                    ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
+                    :radius
+              )
+        """),
+        {"lat": lat, "lng": lng, "radius": radius_m},
+    )).mappings().all()
+
+    if not rows:
+        return []
+
+    species_ids = [r["id"] for r in rows]
+    species_list = (await db.execute(
+        select(Species)
+        .where(Species.id.in_(species_ids))
+        .order_by(Species.common_name)
+    )).scalars().all()
+
+    saved_ids, seen_ids = await _saved_seen_sets(db, current_user.id)
+    return [
+        SpeciesListItem(
+            **SpeciesResponse.model_validate(s).model_dump(),
+            saved=s.id in saved_ids,
+            seen=s.id in seen_ids,
+        )
+        for s in species_list
+    ]
+
+
 @router.get("/{species_id}", response_model=SpeciesListItem)
 async def get_species(
     species_id: int,
@@ -144,4 +191,4 @@ async def species_sightings(
         .order_by(Sighting.identified_at.desc())
         .limit(20)
     )).scalars().all()
-    return rows
+    return [SightingResponse.model_validate(s) for s in rows]

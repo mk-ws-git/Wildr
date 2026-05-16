@@ -5,7 +5,6 @@ from PIL import Image
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.core.config import settings
 from app.core.deps import get_current_user
 from app.database import get_db
@@ -41,15 +40,22 @@ async def _validate_location(db: AsyncSession, location_id: int) -> None:
 
 
 async def _upsert_user_species(db: AsyncSession, user_id: int, species_id: int) -> bool:
-    """Insert user_species row if first time seeing this species. Returns True if new."""
-    stmt = (
-        pg_insert(UserSpecies)
-        .values(user_id=user_id, species_id=species_id)
-        .on_conflict_do_nothing(index_elements=["user_id", "species_id"])
-        .returning(UserSpecies.id)
-    )
-    result = await db.execute(stmt)
-    return result.scalar_one_or_none() is not None
+    """Add species to the user's life list. Returns True if this is the first time."""
+    existing = (await db.execute(
+        select(UserSpecies).where(
+            UserSpecies.user_id == user_id,
+            UserSpecies.species_id == species_id,
+        )
+    )).scalar_one_or_none()
+
+    if existing:
+        if not existing.added_to_list:
+            existing.added_to_list = True
+            db.add(existing)
+        return False  # Not a first sighting
+
+    db.add(UserSpecies(user_id=user_id, species_id=species_id, added_to_list=True))
+    return True  # First sighting
 
 
 KINGDOM_MAP = {
