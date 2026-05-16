@@ -165,6 +165,8 @@ async def import_from_inat(
     db: AsyncSession = Depends(get_db),
 ) -> ImportResult:
     """Import research-grade iNaturalist observations for a given username."""
+    if getattr(current_user, "role", "user") not in ("trusted", "admin"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Import requires trusted or admin role")
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.get(
@@ -287,6 +289,8 @@ async def import_from_ebird(
     db: AsyncSession = Depends(get_db),
 ) -> ImportResult:
     """Import sightings from an eBird observation CSV export."""
+    if getattr(current_user, "role", "user") not in ("trusted", "admin"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Import requires trusted or admin role")
 
     content = await file.read()
     try:

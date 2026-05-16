@@ -161,12 +161,6 @@ export default function Sightings() {
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '2rem 1rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--bd-ink)', margin: 0 }}>My Sightings</h1>
-        <Link
-          to="/log-sighting"
-          style={{ padding: '0.4rem 1rem', borderRadius: '999px', background: 'var(--bd-moss)', color: '#fff', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 600 }}
-        >
-          + Log sighting
-        </Link>
       </div>
 
       {!loading && (

@@ -732,21 +732,6 @@ export default function Home() {
                   <path d="M8 23h8"/>
                 </svg>
               </Link>
-              <Link
-                to="/log"
-                className="w-12 h-12 rounded-full flex items-center justify-center transition hover:scale-105"
-                style={{
-                  background: 'rgba(255,255,255,0.18)',
-                  border: '1px solid rgba(255,255,255,0.30)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                }}
-                title="Log a sighting"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v14M5 12h14"/>
-                </svg>
-              </Link>
             </div>
           </div>
 
@@ -915,7 +900,7 @@ export default function Home() {
                 <div className="flex flex-col items-center py-6 gap-3">
                   <PineTrees size="sm" />
                   <p className="text-sm" style={{ color: 'var(--bd-ink-soft)' }}>
-                    Head out and <Link to="/log-sighting" style={{ color: 'var(--bd-moss)', textDecoration: 'none', fontWeight: 600 }}>log a sighting</Link>!
+                    Head out and identify something!
                   </p>
                 </div>
               ) : (

@@ -10,7 +10,6 @@ import ResetPassword from './pages/ResetPassword'
 import Splash from './pages/Splash'
 import Home from './pages/Home'
 import Identify from './pages/Identify'
-import LogSighting from './pages/LogSighting'
 import Species from './pages/Species'
 import SpeciesDetail from './pages/SpeciesDetail'
 import Walks from './pages/Walks'
@@ -69,7 +68,6 @@ export default function App() {
         <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
         <Route path="/identify" element={<ProtectedRoute><Identify /></ProtectedRoute>} />
         <Route path="/identify/audio" element={<ProtectedRoute><Identify /></ProtectedRoute>} />
-        <Route path="/log-sighting" element={<ProtectedRoute><LogSighting /></ProtectedRoute>} />
         <Route path="/species" element={<ProtectedRoute><Species /></ProtectedRoute>} />
         <Route path="/species/:id" element={<ProtectedRoute><SpeciesDetail /></ProtectedRoute>} />
         <Route path="/walks" element={<ProtectedRoute><Walks /></ProtectedRoute>} />

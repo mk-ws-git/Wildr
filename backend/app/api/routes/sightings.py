@@ -19,6 +19,8 @@ async def create_sighting(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    if getattr(current_user, "role", "user") not in ("trusted", "admin"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Manual sighting entry is restricted")
     point = None
     weather = None
     if body.lat is not None and body.lng is not None:
