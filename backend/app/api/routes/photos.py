@@ -112,11 +112,11 @@ async def _fetch_unsplash_photo(query: str) -> dict | None:
 
 
 PAGE_QUERIES = {
-    "splash":   "misty forest dawn wildlife",
-    "login":    "bird wildlife nature morning",
-    "register": "wildflower meadow spring nature",
-    "forgot":   "woodland fog morning deer",
-    "reset":    "sunrise nature golden hour",
+    "splash":   "misty valley landscape panoramic wide",
+    "login":    "open meadow landscape golden hour wide",
+    "register": "serene lake reflection landscape wide",
+    "forgot":   "foggy mountain landscape wide panoramic",
+    "reset":    "sunrise hills landscape minimalist wide",
 }
 
 # Per-page, per-day cache
