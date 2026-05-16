@@ -132,50 +132,52 @@ function ResultCard({ result, onReset }) {
 
       {/* Bottom: species info + CTA */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-        {/* Confidence chip */}
-        <div
-          className="inline-flex items-center gap-1 mb-3 px-3 py-1 rounded-full text-xs font-semibold"
-          style={{ background: 'rgba(255,255,255,0.16)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.85)' }}
-        >
-          {Math.round(score * 100)}% match
-        </div>
 
-        {/* Species name */}
-        <Link to={`/species/${species.id}`} style={{ textDecoration: 'none' }}>
-          <h2
-            className="text-4xl font-bold text-white leading-tight mb-1 hover:underline underline-offset-4"
-            style={{ letterSpacing: '-0.01em' }}
-          >
-            {species.common_name}
-          </h2>
-        </Link>
-        <p className="text-sm italic mb-4" style={{ color: 'rgba(255,255,255,0.60)' }}>
-          {species.scientific_name}
-        </p>
-
-        {/* Fun fact */}
-        {species.fun_fact && (
-          <p className="text-sm leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.78)' }}>
-            {species.fun_fact}
-          </p>
-        )}
-
-        {/* Alternative suggestions */}
-        {uncertain && suggestions?.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="text-xs self-center" style={{ color: 'rgba(255,255,255,0.50)' }}>
-              Could also be:
-            </span>
-            {suggestions.map((s) => (
-              <span
-                key={s.scientific_name}
-                className="text-xs px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.80)' }}
+        {uncertain ? (
+          /* Low confidence — unknown, offer manual pick */
+          <>
+            <h2 className="text-3xl font-bold text-white leading-tight mb-1" style={{ letterSpacing: '-0.01em' }}>
+              Unknown
+            </h2>
+            <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              We couldn't identify this with confidence. Could it be one of these?
+            </p>
+            {suggestions?.length > 0 && (
+              <div className="flex flex-col gap-2 mb-4">
+                {[result, ...suggestions].filter(Boolean).map((s) => (
+                  <Link
+                    key={s.scientific_name}
+                    to={`/species/${s.id ?? species.id}`}
+                    className="flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium text-white transition hover:brightness-110"
+                    style={{ background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.18)', textDecoration: 'none' }}
+                  >
+                    <span>{s.common_name}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem' }}>{s.scientific_name}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          /* High confidence — show species */
+          <>
+            <Link to={`/species/${species.id}`} style={{ textDecoration: 'none' }}>
+              <h2
+                className="text-4xl font-bold text-white leading-tight mb-1 hover:underline underline-offset-4"
+                style={{ letterSpacing: '-0.01em' }}
               >
-                {s.common_name} · {Math.round(s.score * 100)}%
-              </span>
-            ))}
-          </div>
+                {species.common_name}
+              </h2>
+            </Link>
+            <p className="text-sm italic mb-4" style={{ color: 'rgba(255,255,255,0.60)' }}>
+              {species.scientific_name}
+            </p>
+            {species.fun_fact && (
+              <p className="text-sm leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                {species.fun_fact}
+              </p>
+            )}
+          </>
         )}
 
         <button
